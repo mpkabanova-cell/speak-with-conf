@@ -118,7 +118,7 @@ function ComparePage() {
           <div className="hidden grid-cols-[1.4fr_1fr_1fr_1fr] gap-4 px-5 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground md:grid">
             <span>Показатель</span><span>Попытка {num(A)}</span><span>Попытка {num(B)}</span><span>Изменение</span>
           </div>
-          {rows.map((r) => <Row key={r.key} r={r} />)}
+          {rows.map((r) => <Row key={r.key} r={r} labels={[`Попытка ${num(A)}`, `Попытка ${num(B)}`]} />)}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">Темп и длительность не бывают «лучше» сами по себе — ориентируйся на смысл и формат выступления.</p>
       </section>
@@ -164,7 +164,7 @@ function Found({ v }: { v: boolean | null }) {
   );
 }
 
-function Row({ r }: { r: CompareRow }) {
+function Row({ r, labels }: { r: CompareRow; labels: [string, string] }) {
   const diff = r.b - r.a;
   const eps = r.key.includes("100") || r.key.includes("min") ? 0.05 : 0.5;
   const same = Math.abs(diff) < eps;
@@ -178,7 +178,7 @@ function Row({ r }: { r: CompareRow }) {
       <span className="col-span-2 font-semibold md:col-span-1">{r.label}</span>
       {[r.a, r.b].map((v, i) => (
         <div key={i}>
-          <span className="text-xs text-muted-foreground md:hidden">Попытка {i === 0 ? "A" : "B"}</span>
+          <span className="text-xs text-muted-foreground md:hidden">{labels[i]}</span>
           <p className="num text-2xl font-extrabold">{r.fmt(v)}</p>
           <div className="mt-1 h-1.5 w-full max-w-32 rounded-full bg-muted">
             <div className={cn("h-full rounded-full", i === 0 ? "bg-border" : good ? "bg-brand" : bad ? "bg-sun" : "bg-brand-light")} style={{ width: `${(v / max) * 100}%` }} />
