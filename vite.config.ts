@@ -18,6 +18,7 @@ export default defineConfig({
     optimizeDeps: {
       include: [
         "idb",
+        "@supabase/supabase-js",
         "zod",
         "sonner",
         "lucide-react",
