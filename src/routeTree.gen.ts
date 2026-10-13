@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as NewRouteImport } from './routes/new'
+import { Route as AttemptIdRouteImport } from './routes/attempt.$id'
+import { Route as PracticeIdIndexRouteImport } from './routes/practice.$id.index'
+import { Route as PracticeIdCompareRouteImport } from './routes/practice.$id.compare'
+import { Route as PracticeIdRecordRouteImport } from './routes/practice.$id.record'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewRoute = NewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttemptIdRoute = AttemptIdRouteImport.update({
+  id: '/attempt/$id',
+  path: '/attempt/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeIdIndexRoute = PracticeIdIndexRouteImport.update({
+  id: '/practice/$id/',
+  path: '/practice/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeIdCompareRoute = PracticeIdCompareRouteImport.update({
+  id: '/practice/$id/compare',
+  path: '/practice/$id/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeIdRecordRoute = PracticeIdRecordRouteImport.update({
+  id: '/practice/$id/record',
+  path: '/practice/$id/record',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/new': typeof NewRoute
+  '/attempt/$id': typeof AttemptIdRoute
+  '/practice/$id/compare': typeof PracticeIdCompareRoute
+  '/practice/$id/record': typeof PracticeIdRecordRoute
+  '/practice/$id/': typeof PracticeIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/new': typeof NewRoute
+  '/attempt/$id': typeof AttemptIdRoute
+  '/practice/$id/compare': typeof PracticeIdCompareRoute
+  '/practice/$id/record': typeof PracticeIdRecordRoute
+  '/practice/$id': typeof PracticeIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/new': typeof NewRoute
+  '/attempt/$id': typeof AttemptIdRoute
+  '/practice/$id/compare': typeof PracticeIdCompareRoute
+  '/practice/$id/record': typeof PracticeIdRecordRoute
+  '/practice/$id/': typeof PracticeIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/history'
+    | '/new'
+    | '/attempt/$id'
+    | '/practice/$id/compare'
+    | '/practice/$id/record'
+    | '/practice/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/history'
+    | '/new'
+    | '/attempt/$id'
+    | '/practice/$id/compare'
+    | '/practice/$id/record'
+    | '/practice/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/history'
+    | '/new'
+    | '/attempt/$id'
+    | '/practice/$id/compare'
+    | '/practice/$id/record'
+    | '/practice/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HistoryRoute: typeof HistoryRoute
+  NewRoute: typeof NewRoute
+  AttemptIdRoute: typeof AttemptIdRoute
+  PracticeIdCompareRoute: typeof PracticeIdCompareRoute
+  PracticeIdRecordRoute: typeof PracticeIdRecordRoute
+  PracticeIdIndexRoute: typeof PracticeIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new': {
+      id: '/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof NewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attempt/$id': {
+      id: '/attempt/$id'
+      path: '/attempt/$id'
+      fullPath: '/attempt/$id'
+      preLoaderRoute: typeof AttemptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/$id/': {
+      id: '/practice/$id/'
+      path: '/practice/$id'
+      fullPath: '/practice/$id/'
+      preLoaderRoute: typeof PracticeIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/$id/compare': {
+      id: '/practice/$id/compare'
+      path: '/practice/$id/compare'
+      fullPath: '/practice/$id/compare'
+      preLoaderRoute: typeof PracticeIdCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/$id/record': {
+      id: '/practice/$id/record'
+      path: '/practice/$id/record'
+      fullPath: '/practice/$id/record'
+      preLoaderRoute: typeof PracticeIdRecordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HistoryRoute: HistoryRoute,
+  NewRoute: NewRoute,
+  AttemptIdRoute: AttemptIdRoute,
+  PracticeIdCompareRoute: PracticeIdCompareRoute,
+  PracticeIdRecordRoute: PracticeIdRecordRoute,
+  PracticeIdIndexRoute: PracticeIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
