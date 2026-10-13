@@ -12,4 +12,22 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // Pre-bundle deps up front so the dev server never re-optimizes mid-session
+    // (which loads two React copies and crashes with "reading 'use'").
+    optimizeDeps: {
+      include: [
+        "idb",
+        "@supabase/supabase-js",
+        "zod",
+        "sonner",
+        "lucide-react",
+        "@radix-ui/react-slot",
+        "@radix-ui/react-select",
+        "@radix-ui/react-checkbox",
+        "@radix-ui/react-label",
+      ],
+      exclude: ["@huggingface/transformers"],
+    },
+  },
 });
