@@ -174,7 +174,7 @@ function ProcessingState({ attempt, stage, onRetry, practiceId }: { attempt: Att
 
 function Metric({ label, value, sub }: { label: string; value: string; sub?: string | undefined }) {
   return (
-    <div className="px-5 py-4">
+    <div className="bg-background px-5 py-4">
       <p className="text-xs font-semibold text-muted-foreground">{label}</p>
       <p className="num mt-1 text-3xl font-extrabold">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
@@ -255,7 +255,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
         </Link>
       )}
       {/* Metrics */}
-      <section className="grid grid-cols-2 divide-x divide-y rounded-2xl border md:grid-cols-5 md:divide-y-0 [&>*:nth-child(2n+1)]:border-l-0 md:[&>*:nth-child(2n+1)]:border-l md:[&>*:first-child]:border-l-0">
+      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
         <Metric
           label="Продолжительность"
           value={fmtTime(dur)}
