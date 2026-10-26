@@ -1,11 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { analysisInputSchema, buildAnalysisInput, supportsSubjectAccuracy, validateAnalysis } from "./subject-analysis";
+import { accuracyVerdict, analysisInputSchema, buildAnalysisInput, shouldAnalyzeAutomatically, supportsSubjectAccuracy, validateAnalysis } from "./subject-analysis";
 
 const input = { type: "project" as const, prompt: "Очистка воды", source_text: "Сначала фильтрация. Затем кипячение. Участвовало 10 учеников.", transcript: "Участвовало 20 учеников." };
 function output() {
-  return { elements: [], sequence_issues: [], recommendations: [], summary: "", accuracy: { basis: "source", summary: "", findings: [{ status: "error", quote: "20 учеников", explanation: "Количество отличается", correction: "10 учеников", source_quote: "10 учеников" }] } };
+  return { relevance: { status: "on_topic", explanation: "", quote: null }, claims: [], elements: [], sequence_issues: [], recommendations: [], summary: "", accuracy: { basis: "source", summary: "", findings: [{ status: "error", quote: "20 учеников", explanation: "Количество отличается", correction: "10 учеников", source_quote: "10 учеников" }] } };
 }
 describe("Subject accuracy rules", () => {
+  it("automatically checks a new transcript without any consent flag", () => {
+    const ready = { type: "answer" as const, transcript: "Сложи числители", needsAnalysis: true, busy: false, editing: false, failed: false, started: false };
+    expect(shouldAnalyzeAutomatically(ready)).toBe(true);
+    expect(shouldAnalyzeAutomatically({ ...ready, type: "memorize" })).toBe(false);
+    expect(shouldAnalyzeAutomatically({ ...ready, failed: true })).toBe(false);
+    expect(shouldAnalyzeAutomatically({ ...ready, started: true })).toBe(false);
+    expect(shouldAnalyzeAutomatically({ ...ready, needsAnalysis: false })).toBe(false);
+  });
+  it("counts only confirmed errors, not recognition uncertainty", () => {
+    expect(accuracyVerdict([{ status: "error" }, { status: "uncertain" }])).toMatchObject({ errors: 1, uncertain: 1 });
+    expect(accuracyVerdict([{ status: "uncertain" }]).errors).toBe(0);
+  });
+  it("rejects invented topic and claim evidence", () => {
+    expect(() => validateAnalysis({ ...output(), relevance: { status: "on_topic", explanation: "", quote: "дроби" } }, input)).toThrow("Invalid topic evidence");
+    expect(() => validateAnalysis({ ...output(), claims: [{ quote: "30 учеников", status: "correct", explanation: "" }] }, input)).toThrow("Invalid claim evidence");
+  });
+  it("requires a finding for an incorrect assertion", () => {
+    expect(() => validateAnalysis({ ...output(), claims: [{ quote: "20 учеников", status: "uncertain", explanation: "" }] }, input)).toThrow("Missing claim finding");
+  });
   it.each(["answer", "retelling", "project"] as const)("checks %s", type => expect(supportsSubjectAccuracy(type)).toBe(true));
   it("excludes memorize", () => {
     expect(supportsSubjectAccuracy("memorize")).toBe(false);
