@@ -49,7 +49,6 @@ function AttemptPage() {
   const qc = useQueryClient();
   const [stage, setStage] = useState<Stage>(null);
   const running = useRef(false);
-  const [cloudConsent, setCloudConsent] = useState(false);
   const [partialText, setPartialText] = useState("");
   const [usingCloud, setUsingCloud] = useState(false);
 
@@ -68,7 +67,6 @@ function AttemptPage() {
     running.current = true;
     setUsingCloud(cloud);
     setPartialText("");
-    setCloudConsent(false);
     try {
       setStage({ key: "decode" });
       const blob = await getAudio(a.audio_reference);
