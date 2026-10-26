@@ -18,6 +18,7 @@ import { getAudio, saveAttempt } from "@/lib/db";
 import { decodeTo16k, detectSpeech, findPauses, fmtSec, fmtTime } from "@/lib/audio-analysis";
 import { transcribe, type TranscribeProgress } from "@/lib/transcribe";
 import { cloudTranscribe } from "@/lib/cloud-transcribe";
+import { completeTranscript } from "@/lib/local-transcription";
 import { hashText, mergeRecommendations, speechRecommendations, textMetrics } from "@/lib/analysis";
 import { fillerFrequency } from "@/lib/fillers";
 import { analyzeStructure } from "@/lib/structure.functions";
@@ -95,7 +96,7 @@ function AttemptPage() {
         p.type === "memorize",
       );
       setStage({ key: "metrics" });
-      const transcript = tr.chunks.length ? tr.chunks.map((c) => c.text).join("").trim() : tr.text;
+      const transcript = completeTranscript(tr);
       if (!transcript) throw new Error("Распознавание не вернуло текст. Попробуй говорить ближе к микрофону.");
       cur = { ...cur, transcript, chunks: tr.chunks, transcript_edited: false, recite_accepted: [], transcription_model: cloud ? "openai/gpt-transcribe" : "local-whisper", ...textMetrics(transcript, duration_ms), status: "ready" };
       cur.recommendations = mergeRecommendations(speechRecommendations(cur, p), []);

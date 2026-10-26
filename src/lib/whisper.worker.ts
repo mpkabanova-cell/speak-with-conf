@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import { pipeline, env, type AutomaticSpeechRecognitionPipeline } from "@huggingface/transformers";
+import { withQuietTail } from "./local-transcription";
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
@@ -55,7 +56,7 @@ self.onmessage = async (e: MessageEvent<{ type: "transcribe"; samples: Float32Ar
     post({ type: "status", status: "loading" });
     const model = await load(!!e.data.accurate);
     post({ type: "status", status: "transcribing", device: deviceUsed });
-    const out = (await model(e.data.samples, {
+    const out = (await model(withQuietTail(e.data.samples), {
       language: e.data.language || "russian",
       task: "transcribe",
       chunk_length_s: 30,
@@ -65,7 +66,7 @@ self.onmessage = async (e: MessageEvent<{ type: "transcribe"; samples: Float32Ar
     post({
       type: "done",
       text: out.text.trim(),
-      chunks: (out.chunks ?? []).map((c) => ({ text: c.text, start: c.timestamp[0], end: c.timestamp[1] })),
+      chunks: (out.chunks ?? []).map((c) => ({ text: c.text, start: Math.min(c.timestamp[0], e.data.samples.length / 16000), end: c.timestamp[1] == null ? null : Math.min(c.timestamp[1], e.data.samples.length / 16000) })),
       device: deviceUsed,
     });
   } catch (err) {
