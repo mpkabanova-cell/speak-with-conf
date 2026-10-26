@@ -14,6 +14,7 @@ export function transcribe(
   samples: Float32Array,
   onProgress: (p: TranscribeProgress) => void,
   language = "russian",
+  accurate = false,
 ): Promise<{ text: string; chunks: TranscriptChunk[] }> {
   if (typeof Worker === "undefined" || typeof WebAssembly === "undefined") {
     return Promise.reject(new Error("Этот браузер не поддерживает локальное распознавание речи. Попробуй свежую версию Chrome, Edge или Safari."));
@@ -45,6 +46,6 @@ export function transcribe(
       reject(new Error(ev.message || "Не удалось запустить распознавание"));
     };
     const copy = samples.slice();
-    w.postMessage({ type: "transcribe", samples: copy, language }, [copy.buffer]);
+    w.postMessage({ type: "transcribe", samples: copy, language, accurate }, [copy.buffer]);
   });
 }

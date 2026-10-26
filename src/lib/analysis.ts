@@ -20,7 +20,7 @@ export function hashText(t: string) {
 export function speechRecommendations(a: Attempt, p: Practice): Recommendation[] {
   const out: Recommendation[] = [];
   if (p.type === "memorize" && p.source_text && a.transcript) {
-    const r = compareRecitation(p.source_text, a.transcript);
+    const r = compareRecitation(p.source_text, a.transcript, a.recite_accepted);
     const firstMiss = r.tokens.findIndex((t) => t.status === "missed");
     if (r.missed) {
       const before = r.tokens.slice(Math.max(0, firstMiss - 3), firstMiss).map((t) => t.text).join(" ");
