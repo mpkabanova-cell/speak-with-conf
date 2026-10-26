@@ -298,7 +298,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
               accepted={attempt.recite_accepted ?? []}
               onAccept={(k) => {
                 const next = { ...attempt, recite_accepted: [...(attempt.recite_accepted ?? []), k] };
-                void update({ ...next, recommendations: mergeRecs(next) });
+                void update({ ...next, recommendations: mergeRecommendations(speechRecommendations(next, practice), next.structure_analysis?.recommendations ?? []) });
               }}
             />
           </div>

@@ -5,6 +5,7 @@ env.allowLocalModels = false;
 env.useBrowserCache = true;
 
 let asr: AutomaticSpeechRecognitionPipeline | null = null;
+let asrAccurate = false;
 let deviceUsed: "webgpu" | "wasm" = "wasm";
 
 const post = (m: unknown) => (self as unknown as DedicatedWorkerGlobalScope).postMessage(m);
@@ -18,8 +19,9 @@ async function hasWebGPU() {
   }
 }
 
-async function load() {
-  if (asr) return asr;
+async function load(accurate: boolean) {
+  if (asr && (asrAccurate || !accurate)) return asr;
+  asr = null;
   const progress_callback = (p: { status: string; file?: string; progress?: number; loaded?: number; total?: number }) => {
     if (p.status === "progress") post({ type: "load-progress", file: p.file, loaded: p.loaded, total: p.total });
   };
@@ -31,25 +33,27 @@ async function load() {
         progress_callback,
       })) as AutomaticSpeechRecognitionPipeline;
       deviceUsed = "webgpu";
+      asrAccurate = true;
       return asr;
     } catch {
       asr = null;
     }
   }
-  asr = (await pipeline("automatic-speech-recognition", "onnx-community/whisper-base", {
+  asr = (await pipeline("automatic-speech-recognition", accurate ? "onnx-community/whisper-small" : "onnx-community/whisper-base", {
     device: "wasm",
     dtype: "q8",
     progress_callback,
   })) as AutomaticSpeechRecognitionPipeline;
   deviceUsed = "wasm";
+  asrAccurate = accurate;
   return asr;
 }
 
-self.onmessage = async (e: MessageEvent<{ type: "transcribe"; samples: Float32Array; language?: string }>) => {
+self.onmessage = async (e: MessageEvent<{ type: "transcribe"; samples: Float32Array; language?: string; accurate?: boolean }>) => {
   if (e.data.type !== "transcribe") return;
   try {
     post({ type: "status", status: "loading" });
-    const model = await load();
+    const model = await load(!!e.data.accurate);
     post({ type: "status", status: "transcribing", device: deviceUsed });
     const out = (await model(e.data.samples, {
       language: e.data.language || "russian",

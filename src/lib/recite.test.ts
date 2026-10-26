@@ -26,3 +26,23 @@ describe("compareRecitation", () => {
     expect(r.tokens[2]?.extraBefore).toEqual(["ну"]);
   });
 });
+
+describe("compareRecitation tolerance", () => {
+  const src = "Листья в поле пожелтели, И кружатся, и летят; Лишь в бору поникши ели Зелень мрачную хранят.";
+  it("speech-recognition slips in long words count as matched", () => {
+    const r = compareRecitation(src, "листья в поле пожелтили и кружатся и летят лишь в бору поникши ели зенень мрачную хранят");
+    expect([r.matched, r.missed, r.wrong]).toEqual([16, 0, 0]);
+  });
+  it("exactly two real mistakes give exactly two", () => {
+    const r = compareRecitation(src, "листья в поле пожелтели и кружатся и летят лишь в бору ели зелень тёмную хранят");
+    expect(r.missed + r.wrong).toBe(2);
+  });
+  it("a joined word in speech matches two source words", () => {
+    const r = compareRecitation("Уж не любит меж цветов", "уж не любит межцветов");
+    expect(r.matched).toBe(5);
+  });
+  it("accepting a word marks it as matched", () => {
+    const r = compareRecitation("Мороз и солнце день чудесный", "мороз и солнце чудесный", [3]);
+    expect([r.matched, r.missed]).toEqual([5, 0]);
+  });
+});
