@@ -53,7 +53,7 @@ async function toBase64(file: File): Promise<{ mime: "image/jpeg" | "application
   c.width = Math.round(bmp.width * k);
   c.height = Math.round(bmp.height * k);
   c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
-  return { mime: "image/jpeg", data: c.toDataURL("image/jpeg", 0.88).split(",")[1] };
+  return { mime: "image/jpeg", data: c.toDataURL("image/jpeg", 0.88).split(",")[1] ?? "" };
 }
 
 const schema = z.object({

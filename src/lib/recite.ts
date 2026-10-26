@@ -47,15 +47,15 @@ export function compareRecitation(source: string, spoken: string): ReciteResult 
   const flush = (nextExp: number | null) => {
     const k = Math.min(dels.length, ins.length);
     for (let x = 0; x < k; x++) {
-      const t = tokens[expIdx[dels[x]]!];
+      const t = tokens[expIdx[dels[x]!]!]!;
       t.status = "wrong";
-      t.said = saidRaw[ins[x]]!;
+      t.said = saidRaw[ins[x]!]!;
       wrong++;
     }
-    for (const d of dels.slice(k)) { tokens[expIdx[d]]!.status = "missed"; missed++; }
+    for (const d of dels.slice(k)) { tokens[expIdx[d]!]!.status = "missed"; missed++; }
     const rest = ins.slice(k).map((j) => saidRaw[j]!);
     extra += rest.length;
-    if (nextExp != null) tokens[expIdx[nextExp]]!.extraBefore.push(...rest);
+    if (nextExp != null) tokens[expIdx[nextExp]!]!.extraBefore.push(...rest);
     else extraEnd.push(...rest);
     dels = []; ins = [];
   };
@@ -64,7 +64,7 @@ export function compareRecitation(source: string, spoken: string): ReciteResult 
   while (i < n || j < mm) {
     if (i < n && j < mm && a[i]! === b[j]!) {
       flush(i);
-      tokens[expIdx[i]]!.status = "ok";
+      tokens[expIdx[i]!]!.status = "ok";
       matched++; i++; j++;
     } else if (j >= mm || (i < n && dp[(i + 1) * W + j]! >= dp[i * W + j + 1]!)) {
       dels.push(i++);
