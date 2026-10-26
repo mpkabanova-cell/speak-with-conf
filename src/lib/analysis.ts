@@ -26,7 +26,7 @@ export function speechRecommendations(a: Attempt, p: Practice): Recommendation[]
       const before = r.tokens.slice(Math.max(0, firstMiss - 3), firstMiss).map((t) => t.text).join(" ");
       out.push({
         source: "speech",
-        text: `Пропущено слов: ${r.missed}. Первый пропуск — «${r.tokens[firstMiss].text}»${before ? ` после «${before}»` : ""}. Повтори этот фрагмент отдельно несколько раз.`,
+        text: `Пропущено слов: ${r.missed}. Первый пропуск — «${r.tokens[firstMiss]!.text}»${before ? ` после «${before}»` : ""}. Повтори этот фрагмент отдельно несколько раз.`,
       });
     }
     const wrongs = r.tokens.filter((t) => t.status === "wrong").slice(0, 2);

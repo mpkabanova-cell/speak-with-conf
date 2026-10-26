@@ -23,6 +23,6 @@ describe("compareRecitation", () => {
   it("counts an inserted word as extra", () => {
     const r = compareRecitation("Я помню чудное мгновенье", "Я помню ну чудное мгновенье");
     expect(r.extra).toBe(1);
-    expect(r.tokens[2].extraBefore).toEqual(["ну"]);
+    expect(r.tokens[2]?.extraBefore).toEqual(["ну"]);
   });
 });
