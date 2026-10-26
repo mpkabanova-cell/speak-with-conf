@@ -1,5 +1,5 @@
 # Tasks
-- [ ] Reorder report around errors and corrections, show verification basis, separate structure from content and remove repeated findings; verify saved report in UI.
+- [x] Reorder report around errors and corrections, show verification basis, separate structure from content and remove repeated findings; saved report checked on desktop/mobile and reload, 15 regression tests pass. Presentation verified with controlled stored results, not a fresh speech/AI request.
 - [x] Automatically analyze completed/edited transcripts without confirmation, with clear topic and claim verdicts; failed input is not retried on reload.
 - [x] Move transcript above results; preserve final words from complete recognizer text and append local inference silence without changing audio/duration. Original user audio was not uploaded, so its recognition quality remains unverified.
 - [x] Test automatic analysis on incorrect fraction rule, correction/reanalysis and persistence through UI; desktop/mobile render without overflow or runtime errors. Regression tests pass.
