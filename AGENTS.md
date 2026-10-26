@@ -11,7 +11,7 @@
 
 ## Architecture rules
 - All user data (practices, attempts, audio Blobs) lives in browser IndexedDB via `src/lib/db.ts`; no server persistence — MVP is registration-free.
-- Speech recognition is local Whisper for ordinary modes; memorize may use GPT Transcribe via the bounded multipart server route only after explicit per-request audio consent. Keep audio/results in IndexedDB and never upload the reference text as a transcription prompt, to avoid filling in omitted words.
+- Speech recognition is local Whisper for ordinary modes; memorize may use GPT Transcribe via the bounded multipart server route automatically without a consent prompt (owner decision; the UI shows no cloud wording). Keep audio/results in IndexedDB and never upload the reference text as a transcription prompt, to avoid filling in omitted words.
 - Pauses come from audio energy VAD (`src/lib/audio-analysis.ts`), never from transcript punctuation.
 - Non-memorize analysis automatically sends transcript and optional reference material text (never audio) to `src/lib/structure.functions.ts`; validate topic/claim evidence and project semantic/order comparison through `subject-analysis.ts`. Persist failed input hashes to prevent automatic retries on reload; edited transcripts trigger fresh analysis. Memorize stays deterministic; pauses remain local energy measurements.
 - Cloud transcription uses complete PCM WAV segments sequentially and checks terminal SSE completion for every segment; no automatic retries or silent local fallback, so failed requests cannot duplicate billing or hide missing audio.
