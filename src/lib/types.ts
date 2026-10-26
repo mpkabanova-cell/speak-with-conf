@@ -3,8 +3,8 @@ export type PracticeType = "answer" | "retelling" | "project" | "memorize";
 export const PRACTICE_TYPES: Record<PracticeType, { label: string; hint: string }> = {
   answer: { label: "Ответ на вопрос", hint: "Объясни тему или ответь на учебный вопрос" },
   retelling: { label: "Пересказ", hint: "Перескажи прочитанный или изученный материал" },
-  project: { label: "Защита проекта", hint: "Подготовься к выступлению на защите" },
   memorize: { label: "Наизусть", hint: "Проверь выученный материал" },
+  project: { label: "Защита проекта", hint: "Подготовься к выступлению на защите" },
 };
 
 /** Whisper language names; value is passed to the recognizer. */
