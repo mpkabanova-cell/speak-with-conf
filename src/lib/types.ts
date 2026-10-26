@@ -57,6 +57,8 @@ export interface StructureElement {
 }
 
 export interface StructureAnalysis {
+  relevance?: { status: "on_topic" | "partial" | "off_topic" | "uncertain"; explanation: string; quote: string | null };
+  claims?: { quote: string; status: "correct" | "error" | "uncertain"; explanation: string }[];
   elements: StructureElement[];
   sequence_issues: string[];
   recommendations: string[];
@@ -100,6 +102,7 @@ export interface Attempt {
   speech_start: number | null;
   speech_end: number | null;
   structure_analysis: StructureAnalysis | null;
+  analysis_error?: { hash: string; message: string } | null;
   recommendations: Recommendation[] | null;
   audio_reference: string; // key in audio store
   audio_type: string;

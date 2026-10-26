@@ -6,8 +6,14 @@ import { analysisInputSchema, analysisInstructions, buildAnalysisInput, validate
 const JSON_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["elements", "sequence_issues", "recommendations", "summary", "accuracy"],
+  required: ["relevance", "claims", "elements", "sequence_issues", "recommendations", "summary", "accuracy"],
   properties: {
+    relevance: { type: "object", additionalProperties: false, required: ["status", "explanation", "quote"], properties: {
+      status: { type: "string", enum: ["on_topic", "partial", "off_topic", "uncertain"] }, explanation: { type: "string" }, quote: { type: ["string", "null"] },
+    } },
+    claims: { type: "array", items: { type: "object", additionalProperties: false, required: ["quote", "status", "explanation"], properties: {
+      quote: { type: "string" }, status: { type: "string", enum: ["correct", "error", "uncertain"] }, explanation: { type: "string" },
+    } } },
     elements: {
       type: "array",
       items: {
