@@ -1,10 +1,22 @@
-export type PracticeType = "answer" | "retelling" | "project";
+export type PracticeType = "answer" | "retelling" | "project" | "memorize";
 
 export const PRACTICE_TYPES: Record<PracticeType, { label: string; hint: string }> = {
   answer: { label: "Ответ на вопрос", hint: "Объясни тему или ответь на учебный вопрос" },
   retelling: { label: "Пересказ", hint: "Перескажи прочитанный или изученный материал" },
   project: { label: "Защита проекта", hint: "Подготовься к выступлению на защите" },
+  memorize: { label: "Наизусть", hint: "Расскажи стихотворение или текст слово в слово" },
 };
+
+/** Whisper language names; value is passed to the recognizer. */
+export const LANGUAGES = [
+  { code: "russian", label: "Русский" },
+  { code: "english", label: "Английский" },
+  { code: "german", label: "Немецкий" },
+  { code: "french", label: "Французский" },
+  { code: "spanish", label: "Испанский" },
+  { code: "italian", label: "Итальянский" },
+] as const;
+export type LanguageCode = (typeof LANGUAGES)[number]["code"];
 
 export interface Practice {
   id: string;
@@ -13,6 +25,10 @@ export interface Practice {
   prompt: string;
   target_duration: number | null; // seconds
   created_at: number;
+  /** Source text: optional for retelling, required for memorize */
+  source_text?: string | null;
+  /** Speech language for recognition; defaults to russian */
+  language?: LanguageCode;
 }
 
 export interface FillerHit {
