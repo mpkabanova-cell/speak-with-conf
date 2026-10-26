@@ -52,7 +52,10 @@ async function toBase64(file: File): Promise<{ mime: "image/jpeg" | "application
   const c = document.createElement("canvas");
   c.width = Math.round(bmp.width * k);
   c.height = Math.round(bmp.height * k);
-  c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+  const context = c.getContext("2d");
+  if (!context) throw new Error("Не удалось прочитать изображение");
+  context.drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close();
   return { mime: "image/jpeg", data: c.toDataURL("image/jpeg", 0.88).split(",")[1] ?? "" };
 }
 
@@ -74,7 +77,7 @@ function NewPractice() {
   const [reading, setReading] = useState(false);
   const extract = useServerFn(extractSourceText);
   const needsSource = type === "memorize";
-  const showSource = type === "retelling" || type === "memorize";
+  const showSource = type === "retelling" || type === "memorize" || type === "project";
 
   function onSourceChange(t: string) {
     setSource(t);
@@ -86,7 +89,7 @@ function NewPractice() {
   async function onFile(file: File | undefined) {
     if (!file) return;
     if (file.size > 15 * 1024 * 1024) return toast.error("Файл слишком большой — до 15 МБ");
-    if (/^text\/|\.(txt|md)$/i.test(file.type || file.name)) return onSourceChange((await file.text()).trim());
+    if (/^text\//i.test(file.type) || /\.(txt|md)$/i.test(file.name)) return onSourceChange((await file.text()).trim());
     if (!(file.type.startsWith("image/") || file.type === "application/pdf"))
       return toast.error("Подойдёт фото, PDF или текстовый файл (.txt)");
     setReading(true);
@@ -173,8 +176,8 @@ function NewPractice() {
         {showSource && (
           <div className="mt-8">
             <Label htmlFor="source" className="block text-sm font-bold">
-              {needsSource ? "Текст, который нужно рассказать" : "Исходный текст"}{" "}
-              <span className="font-normal text-muted-foreground">{needsSource ? "— обязательно" : "— необязательно, чтобы проверить полноту пересказа"}</span>
+              {needsSource ? "Текст, который нужно рассказать" : type === "project" ? "Материалы проекта" : "Исходный текст"}{" "}
+              <span className="font-normal text-muted-foreground">{needsSource ? "— обязательно" : "— необязательно"}</span>
             </Label>
             <div className="mt-2 flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" disabled={reading} asChild>

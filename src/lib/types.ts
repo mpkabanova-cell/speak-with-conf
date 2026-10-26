@@ -25,7 +25,7 @@ export interface Practice {
   prompt: string;
   target_duration: number | null; // seconds
   created_at: number;
-  /** Source text: optional for retelling, required for memorize */
+  /** Reference materials: optional for retelling/project, required for memorize */
   source_text?: string | null;
   /** Speech language for recognition; defaults to russian */
   language?: LanguageCode;
@@ -62,6 +62,18 @@ export interface StructureAnalysis {
   recommendations: string[];
   summary: string;
   transcript_hash: string;
+  analysis_version?: number;
+  accuracy?: {
+    basis: "source" | "general_knowledge";
+    summary: string;
+    findings: {
+      status: "error" | "uncertain";
+      quote: string;
+      explanation: string;
+      correction: string | null;
+      source_quote: string | null;
+    }[];
+  };
 }
 
 export interface Recommendation {
