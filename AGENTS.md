@@ -19,3 +19,4 @@
 - Recitation («Наизусть») check is a deterministic similarity-weighted word alignment in `src/lib/recite.ts` (case/punctuation ignored, small recognition slips tolerated, student can accept words), never AI — so mismatches are exact and reproducible.
 - Photo/PDF source text is OCR'd by `extractSourceText` (AI Gateway) only on explicit upload; the student edits the result, and the edited text is the reference. Whisper language comes from `Practice.language`.
 - Local inference gets a quiet tail without changing stored audio or measured duration; use the recognizer's complete text rather than timestamp chunks as the transcript to retain final words.
+- Render non-memorize content results through ContentReport before speech metrics and recommendations; use validated findings once for errors/corrections and keep structural presence independent of factual correctness.
