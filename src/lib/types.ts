@@ -91,4 +91,6 @@ export interface Attempt {
   recommendations: Recommendation[] | null;
   audio_reference: string; // key in audio store
   audio_type: string;
+  /** Source-word indices the student marked as said correctly (recognition slip). */
+  recite_accepted?: number[];
 }

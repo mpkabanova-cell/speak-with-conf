@@ -81,6 +81,7 @@ function AttemptPage() {
       const tr = await transcribe(decoded.samples, (pr: TranscribeProgress) =>
         setStage(pr.stage === "loading" ? { key: "loading", percent: pr.percent } : { key: "transcribing" }),
         p.language ?? "russian",
+        p.type === "memorize",
       );
       setStage({ key: "metrics" });
       const transcript = tr.chunks.length ? tr.chunks.map((c) => c.text).join("").trim() : tr.text;
@@ -290,7 +291,17 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
       {practice.type === "memorize" && practice.source_text && (
         <section>
           <h2 className="text-xl font-bold">Сверка с текстом</h2>
-          <div className="mt-4"><ReciteView source={practice.source_text} spoken={transcript} /></div>
+          <div className="mt-4">
+            <ReciteView
+              source={practice.source_text}
+              spoken={transcript}
+              accepted={attempt.recite_accepted ?? []}
+              onAccept={(k) => {
+                const next = { ...attempt, recite_accepted: [...(attempt.recite_accepted ?? []), k] };
+                void update({ ...next, recommendations: mergeRecs(next) });
+              }}
+            />
+          </div>
         </section>
       )}
 
