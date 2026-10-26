@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Mic, MicOff, RotateCcw, Sparkles, Square } from "lucide-react";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, AiNotice } from "@/components/AppShell";
 import { LiveWave } from "@/components/Waveform";
 import { Button } from "@/components/ui/button";
 import { practiceQuery } from "@/lib/queries";
@@ -219,6 +219,12 @@ function RecordPage() {
                   : "Этот браузер не умеет записывать звук. Открой сайт в свежей версии Chrome, Edge, Firefox или Safari."}
             </p>
             <Button variant="outline" size="sm" className="mt-3" onClick={() => setState("idle")}>Попробовать снова</Button>
+          </div>
+        )}
+
+        {!recording && state !== "recorded" && (
+          <div className="mt-8 w-full rounded-2xl bg-muted p-4 text-left">
+            <AiNotice />
           </div>
         )}
 

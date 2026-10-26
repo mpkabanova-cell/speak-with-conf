@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { MessageCircleQuestion, BookOpen, Presentation, ArrowRight, ScrollText, Camera, FileUp, Loader2, ShieldCheck } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { AppShell, StorageNote } from "@/components/AppShell";
+import { AppShell, StorageNote, AiNotice } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -231,6 +231,10 @@ function NewPractice() {
         <Input id="min" inputMode="decimal" value={minutes} onChange={(e) => setMinutes(e.target.value)} placeholder="например, 3" className="mt-2 h-11 max-w-40 rounded-xl" />
 
         {err && <p className="mt-4 text-sm font-semibold text-destructive">{err}</p>}
+
+        <div className="mt-10 rounded-2xl bg-muted p-4">
+          <AiNotice />
+        </div>
 
         <div className="mt-10 flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <StorageNote />
