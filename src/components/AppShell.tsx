@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { AudioLines, History } from "lucide-react";
+import { AudioLines, History, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -29,6 +30,18 @@ export function StorageNote() {
   return (
     <p className="text-xs text-muted-foreground">
       Записи хранятся только в этом браузере и могут исчезнуть при очистке его данных.
+    </p>
+  );
+}
+
+export function AiNotice({ className }: { className?: string }) {
+  return (
+    <p className={cn("flex items-start gap-2 text-xs text-muted-foreground", className)}>
+      <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand-deep" />
+      <span>
+        Запись обрабатывает искусственный интеллект. Не называй паспортные данные, адрес, телефон, пароли и другие
+        личные сведения — рассказывай только об учебном материале.
+      </span>
     </p>
   );
 }
