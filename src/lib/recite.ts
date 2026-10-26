@@ -52,6 +52,8 @@ export function wordMatch(a: string, b: string): "ok" | "fuzzy" | null {
 }
 
 const SCORE = { ok: 2, fuzzy: 1.5 } as const;
+/** Split/joined words («меж цветов» ↔ «межцветов») must be near-exact to avoid swallowing real skips. */
+const joinMatch = (a: string, b: string) => (lev(a, b) <= 1 && Math.min(a.length, b.length) >= 5 ? "ok" : null);
 
 export function compareRecitation(source: string, spoken: string, accepted: number[] = []): ReciteResult {
   const tokens: ReciteToken[] = [];
@@ -80,11 +82,11 @@ export function compareRecitation(source: string, spoken: string, accepted: numb
         if (r && at(i + 1, j + 1) + SCORE[r] > best) { best = at(i + 1, j + 1) + SCORE[r]; move = 1; }
       }
       if (i < n && j + 1 < mm && a[i]!.length >= 4) {
-        const r = wordMatch(a[i]!, b[j]! + b[j + 1]!);
+        const r = joinMatch(a[i]!, b[j]! + b[j + 1]!);
         if (r && at(i + 1, j + 2) + SCORE[r] + 0.1 > best) { best = at(i + 1, j + 2) + SCORE[r] + 0.1; move = 4; }
       }
       if (i + 1 < n && j < mm && b[j]!.length >= 4) {
-        const r = wordMatch(a[i]! + a[i + 1]!, b[j]!);
+        const r = joinMatch(a[i]! + a[i + 1]!, b[j]!);
         if (r && at(i + 2, j + 1) + 2 * SCORE[r] - 0.1 > best) { best = at(i + 2, j + 1) + 2 * SCORE[r] - 0.1; move = 5; }
       }
       dp[i * W + j] = best;
@@ -120,10 +122,10 @@ export function compareRecitation(source: string, spoken: string, accepted: numb
     if (move === 1) {
       flush(i); mark(i, wordMatch(a[i]!, b[j]!)!, saidRaw[j]!); i++; j++;
     } else if (move === 4) {
-      flush(i); mark(i, wordMatch(a[i]!, b[j]! + b[j + 1]!)!, `${saidRaw[j]} ${saidRaw[j + 1]}`); i++; j += 2;
+      flush(i); mark(i, joinMatch(a[i]!, b[j]! + b[j + 1]!)!, `${saidRaw[j]} ${saidRaw[j + 1]}`); i++; j += 2;
     } else if (move === 5) {
       flush(i);
-      const r = wordMatch(a[i]! + a[i + 1]!, b[j]!)!;
+      const r = joinMatch(a[i]! + a[i + 1]!, b[j]!)!;
       mark(i, r, saidRaw[j]!); mark(i + 1, r, saidRaw[j]!); i += 2; j++;
     } else if (move === 2) dels.push(i++);
     else ins.push(j++);
