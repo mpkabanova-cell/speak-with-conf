@@ -17,6 +17,7 @@ import { attemptQuery } from "@/lib/queries";
 import { getAudio, saveAttempt } from "@/lib/db";
 import { decodeTo16k, detectSpeech, findPauses, fmtSec, fmtTime } from "@/lib/audio-analysis";
 import { transcribe, type TranscribeProgress } from "@/lib/transcribe";
+import { cloudTranscribe } from "@/lib/cloud-transcribe";
 import { hashText, mergeRecommendations, speechRecommendations, textMetrics } from "@/lib/analysis";
 import { fillerFrequency } from "@/lib/fillers";
 import { analyzeStructure } from "@/lib/structure.functions";
@@ -45,6 +46,9 @@ function AttemptPage() {
   const qc = useQueryClient();
   const [stage, setStage] = useState<Stage>(null);
   const running = useRef(false);
+  const [cloudConsent, setCloudConsent] = useState(false);
+  const [partialText, setPartialText] = useState("");
+  const [usingCloud, setUsingCloud] = useState(false);
 
   const attempt = data?.attempt ?? null;
   const practice = data?.practice ?? null;
@@ -56,9 +60,12 @@ function AttemptPage() {
     void qc.invalidateQueries({ queryKey: ["practices"] });
   }
 
-  async function runPipeline(a: Attempt, p: Practice) {
+  async function runPipeline(a: Attempt, p: Practice, cloud = false) {
     if (running.current) return;
     running.current = true;
+    setUsingCloud(cloud);
+    setPartialText("");
+    setCloudConsent(false);
     try {
       setStage({ key: "decode" });
       const blob = await getAudio(a.audio_reference);
@@ -78,7 +85,10 @@ function AttemptPage() {
       await update(cur);
       if (!segments.length) throw new Error("В записи не удалось обнаружить речь. Проверь микрофон и запиши ещё раз.");
 
-      const tr = await transcribe(decoded.samples, (pr: TranscribeProgress) =>
+      if (cloud) setStage({ key: "transcribing" });
+      const tr = cloud
+        ? await cloudTranscribe(decoded.samples, p.language ?? "russian", p.type, true, setPartialText)
+        : await transcribe(decoded.samples, (pr: TranscribeProgress) =>
         setStage(pr.stage === "loading" ? { key: "loading", percent: pr.percent } : { key: "transcribing" }),
         p.language ?? "russian",
         p.type === "memorize",
@@ -86,7 +96,7 @@ function AttemptPage() {
       setStage({ key: "metrics" });
       const transcript = tr.chunks.length ? tr.chunks.map((c) => c.text).join("").trim() : tr.text;
       if (!transcript) throw new Error("Распознавание не вернуло текст. Попробуй говорить ближе к микрофону.");
-      cur = { ...cur, transcript, chunks: tr.chunks, transcript_edited: false, ...textMetrics(transcript, duration_ms), status: "ready" };
+      cur = { ...cur, transcript, chunks: tr.chunks, transcript_edited: false, recite_accepted: [], transcription_model: cloud ? "openai/gpt-transcribe" : "local-whisper", ...textMetrics(transcript, duration_ms), status: "ready" };
       cur.recommendations = mergeRecommendations(speechRecommendations(cur, p), []);
       await update(cur);
     } catch (e) {
@@ -100,7 +110,7 @@ function AttemptPage() {
   }
 
   useEffect(() => {
-    if (attempt && practice && (attempt.status === "recorded" || attempt.status === "transcribing") && !running.current) {
+    if (attempt && practice && practice.type !== "memorize" && (attempt.status === "recorded" || attempt.status === "transcribing") && !running.current) {
       void runPipeline(attempt, practice);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,8 +138,24 @@ function AttemptPage() {
       </div>
       <StoredAudio audioKey={attempt.audio_reference} className="mt-6 w-full" />
 
+      {practice.type === "memorize" && !stage && (
+        <section className="mt-6 border-y py-5">
+          <h2 className="font-bold">{attempt.transcription_model === "openai/gpt-transcribe" ? "Расшифровка GPT Transcribe" : "Распознавание наизусть · GPT Transcribe"}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Для распознавания запись будет отправлена в облако OpenAI через Lovable AI. Запрос расходует кредиты сервиса. Исходный текст не отправляется; модель может ошибаться.</p>
+          <label className="mt-3 flex items-start gap-2 text-sm">
+            <Checkbox checked={cloudConsent} onCheckedChange={v => setCloudConsent(v === true)} aria-label="Согласие на отправку аудио" />
+            Согласен отправить эту аудиозапись для распознавания
+          </label>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button disabled={!cloudConsent} onClick={() => void runPipeline(attempt, practice, true)}><ShieldCheck />{attempt.transcript ? "Распознать заново в облаке" : "Распознать в облаке"}</Button>
+            <Button variant="outline" onClick={() => void runPipeline(attempt, practice, false)}>Распознать на устройстве</Button>
+          </div>
+          {attempt.status === "error" && <p role="alert" className="mt-3 text-sm text-destructive">{attempt.error}</p>}
+        </section>
+      )}
+
       {attempt.status !== "ready" ? (
-        <ProcessingState attempt={attempt} stage={stage} onRetry={() => void update({ ...attempt, status: "recorded", error: null })} practiceId={practice.id} />
+        (practice.type !== "memorize" || stage) && <ProcessingState attempt={attempt} stage={stage} cloud={usingCloud} partialText={partialText} onRetry={() => void update({ ...attempt, status: "recorded", error: null })} practiceId={practice.id} />
       ) : (
         <Results attempt={attempt} practice={practice} update={update} index={data.index} />
       )}
@@ -137,7 +163,7 @@ function AttemptPage() {
   );
 }
 
-function ProcessingState({ attempt, stage, onRetry, practiceId }: { attempt: Attempt; stage: Stage; onRetry: () => void; practiceId: string }) {
+function ProcessingState({ attempt, stage, onRetry, practiceId, cloud = false, partialText = "" }: { attempt: Attempt; stage: Stage; onRetry: () => void; practiceId: string; cloud?: boolean; partialText?: string }) {
   if (attempt.status === "error")
     return (
       <div className="mt-8 rounded-2xl bg-sun-soft p-6">
@@ -156,11 +182,12 @@ function ProcessingState({ attempt, stage, onRetry, practiceId }: { attempt: Att
     { key: "transcribing", label: "Расшифровываю речь" },
     { key: "metrics", label: "Рассчитываю показатели" },
   ];
-  const idx = stage ? steps.findIndex((s) => s.key === stage.key) : 0;
+  const visibleSteps = cloud ? steps.filter(s => s.key !== "loading") : steps;
+  const idx = stage ? visibleSteps.findIndex((s) => s.key === stage.key) : 0;
   return (
     <div className="mt-8 rounded-2xl border p-6">
       <ul className="space-y-3">
-        {steps.map((s, i) => (
+        {visibleSteps.map((s, i) => (
           <li key={s.key} className={cn("flex items-center gap-3 text-sm", i > idx && "text-muted-foreground")}>
             {i < idx ? <Check className="size-4 text-brand-deep" /> : i === idx ? <Loader2 className="size-4 animate-spin text-brand" /> : <CircleDashed className="size-4" />}
             <span className={cn(i === idx && "font-semibold")}>{s.label}</span>
@@ -169,8 +196,9 @@ function ProcessingState({ attempt, stage, onRetry, practiceId }: { attempt: Att
         ))}
       </ul>
       <p className="mt-5 text-xs text-muted-foreground">
-        Распознавание работает прямо в браузере — аудио никуда не отправляется. Первая загрузка модели может занять пару минут, потом она сохранится.
+        {cloud ? "GPT Transcribe обрабатывает запись в облаке. Длительность и паузы измеряются на устройстве." : "Распознавание работает прямо в браузере — аудио никуда не отправляется. Первая загрузка модели может занять пару минут, потом она сохранится."}
       </p>
+      {cloud && partialText && <p aria-live="polite" className="mt-4 whitespace-pre-wrap text-sm leading-7">{partialText}</p>}
     </div>
   );
 }

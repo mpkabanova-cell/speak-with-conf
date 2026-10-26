@@ -93,4 +93,5 @@ export interface Attempt {
   audio_type: string;
   /** Source-word indices the student marked as said correctly (recognition slip). */
   recite_accepted?: number[];
+  transcription_model?: "local-whisper" | "openai/gpt-transcribe";
 }

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as AttemptIdRouteImport } from './routes/attempt.$id'
+import { Route as ApiPublicTranscribeRouteImport } from './routes/api/public/transcribe'
 import { Route as PracticeIdIndexRouteImport } from './routes/practice.$id.index'
 import { Route as PracticeIdCompareRouteImport } from './routes/practice.$id.compare'
 import { Route as PracticeIdRecordRouteImport } from './routes/practice.$id.record'
@@ -37,6 +38,11 @@ const AttemptIdRoute = AttemptIdRouteImport.update({
   path: '/attempt/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTranscribeRoute = ApiPublicTranscribeRouteImport.update({
+  id: '/api/public/transcribe',
+  path: '/api/public/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PracticeIdIndexRoute = PracticeIdIndexRouteImport.update({
   id: '/practice/$id/',
   path: '/practice/$id/',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/new': typeof NewRoute
   '/attempt/$id': typeof AttemptIdRoute
+  '/api/public/transcribe': typeof ApiPublicTranscribeRoute
   '/practice/$id/compare': typeof PracticeIdCompareRoute
   '/practice/$id/record': typeof PracticeIdRecordRoute
   '/practice/$id/': typeof PracticeIdIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryRoute
   '/new': typeof NewRoute
   '/attempt/$id': typeof AttemptIdRoute
+  '/api/public/transcribe': typeof ApiPublicTranscribeRoute
   '/practice/$id/compare': typeof PracticeIdCompareRoute
   '/practice/$id/record': typeof PracticeIdRecordRoute
   '/practice/$id': typeof PracticeIdIndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/new': typeof NewRoute
   '/attempt/$id': typeof AttemptIdRoute
+  '/api/public/transcribe': typeof ApiPublicTranscribeRoute
   '/practice/$id/compare': typeof PracticeIdCompareRoute
   '/practice/$id/record': typeof PracticeIdRecordRoute
   '/practice/$id/': typeof PracticeIdIndexRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/new'
     | '/attempt/$id'
+    | '/api/public/transcribe'
     | '/practice/$id/compare'
     | '/practice/$id/record'
     | '/practice/$id/'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/new'
     | '/attempt/$id'
+    | '/api/public/transcribe'
     | '/practice/$id/compare'
     | '/practice/$id/record'
     | '/practice/$id'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/new'
     | '/attempt/$id'
+    | '/api/public/transcribe'
     | '/practice/$id/compare'
     | '/practice/$id/record'
     | '/practice/$id/'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   NewRoute: typeof NewRoute
   AttemptIdRoute: typeof AttemptIdRoute
+  ApiPublicTranscribeRoute: typeof ApiPublicTranscribeRoute
   PracticeIdCompareRoute: typeof PracticeIdCompareRoute
   PracticeIdRecordRoute: typeof PracticeIdRecordRoute
   PracticeIdIndexRoute: typeof PracticeIdIndexRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AttemptIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/transcribe': {
+      id: '/api/public/transcribe'
+      path: '/api/public/transcribe'
+      fullPath: '/api/public/transcribe'
+      preLoaderRoute: typeof ApiPublicTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice/$id/': {
       id: '/practice/$id/'
       path: '/practice/$id'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   NewRoute: NewRoute,
   AttemptIdRoute: AttemptIdRoute,
+  ApiPublicTranscribeRoute: ApiPublicTranscribeRoute,
   PracticeIdCompareRoute: PracticeIdCompareRoute,
   PracticeIdRecordRoute: PracticeIdRecordRoute,
   PracticeIdIndexRoute: PracticeIdIndexRoute,
