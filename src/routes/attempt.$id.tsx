@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  AlertCircle, ArrowLeft, Check, CircleDashed, GitCompareArrows, Lightbulb, Loader2, Pencil, RotateCcw, ShieldCheck,
+  AlertCircle, ArrowLeft, Check, CircleDashed, GitCompareArrows, Lightbulb, Loader2, Pencil, RotateCcw,
 } from "lucide-react";
 import { AppShell, StorageNote } from "@/components/AppShell";
 import { StoredAudio } from "@/components/AudioPlayer";
@@ -13,7 +13,6 @@ import { ReciteView } from "@/components/ReciteView";
 import { ContentReport } from "@/components/ContentReport";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { attemptQuery } from "@/lib/queries";
 import { getAudio, saveAttempt } from "@/lib/db";
 import { decodeTo16k, detectSpeech, findPauses, fmtSec, fmtTime } from "@/lib/audio-analysis";
