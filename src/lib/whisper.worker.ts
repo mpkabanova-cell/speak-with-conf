@@ -45,14 +45,14 @@ async function load() {
   return asr;
 }
 
-self.onmessage = async (e: MessageEvent<{ type: "transcribe"; samples: Float32Array }>) => {
+self.onmessage = async (e: MessageEvent<{ type: "transcribe"; samples: Float32Array; language?: string }>) => {
   if (e.data.type !== "transcribe") return;
   try {
     post({ type: "status", status: "loading" });
     const model = await load();
     post({ type: "status", status: "transcribing", device: deviceUsed });
     const out = (await model(e.data.samples, {
-      language: "russian",
+      language: e.data.language || "russian",
       task: "transcribe",
       chunk_length_s: 30,
       stride_length_s: 5,

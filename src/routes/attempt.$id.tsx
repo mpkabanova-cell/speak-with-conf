@@ -79,6 +79,7 @@ function AttemptPage() {
 
       const tr = await transcribe(decoded.samples, (pr: TranscribeProgress) =>
         setStage(pr.stage === "loading" ? { key: "loading", percent: pr.percent } : { key: "transcribing" }),
+        p.language ?? "russian",
       );
       setStage({ key: "metrics" });
       const transcript = tr.chunks.length ? tr.chunks.map((c) => c.text).join("").trim() : tr.text;
@@ -205,7 +206,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
     setAiBusy(true);
     setAiError(null);
     try {
-      const r = await analyze({ data: { type: practice.type, prompt: practice.prompt, transcript: transcript.slice(0, 20000) } });
+      const r = await analyze({ data: { type: practice.type, prompt: practice.prompt, transcript: transcript.slice(0, 20000), source_text: practice.source_text?.slice(0, 20000) ?? null } });
       if (!r.ok) {
         setAiError(r.error);
         return;
