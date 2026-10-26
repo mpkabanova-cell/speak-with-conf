@@ -9,6 +9,7 @@ import {
 import { AppShell, StorageNote } from "@/components/AppShell";
 import { StoredAudio } from "@/components/AudioPlayer";
 import { PauseTimeline, TranscriptView } from "@/components/Transcript";
+import { ReciteView } from "@/components/ReciteView";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -203,6 +204,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
   const stale = !!sa && sa.transcript_hash !== hashText(transcript);
 
   async function runAI() {
+    if (practice.type === "memorize") return;
     setAiBusy(true);
     setAiError(null);
     try {
@@ -225,7 +227,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
   }
 
   useEffect(() => {
-    if (!sa && !autoRan.current && typeof window !== "undefined" && localStorage.getItem(CONSENT_KEY) === "1") {
+    if (!sa && practice.type !== "memorize" && !autoRan.current && typeof window !== "undefined" && localStorage.getItem(CONSENT_KEY) === "1") {
       autoRan.current = true;
       void runAI();
     }
@@ -285,8 +287,22 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
         )}
       </section>
 
+      {practice.type === "memorize" && practice.source_text && (
+        <section>
+          <h2 className="text-xl font-bold">Сверка с текстом</h2>
+          <div className="mt-4"><ReciteView source={practice.source_text} spoken={transcript} /></div>
+        </section>
+      )}
+
+      {practice.type === "retelling" && practice.source_text && (
+        <details className="rounded-2xl border p-5">
+          <summary className="cursor-pointer font-bold">Исходный текст для пересказа</summary>
+          <p className="mt-3 max-w-prose whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{practice.source_text}</p>
+        </details>
+      )}
+
       {/* Structure */}
-      <section>
+      {practice.type !== "memorize" && <section>
         <h2 className="text-xl font-bold">Структура выступления</h2>
         {!sa || stale ? (
           <div className="mt-4 rounded-2xl border p-5">
@@ -340,7 +356,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
             )}
           </div>
         )}
-      </section>
+      </section>}
 
       {/* Pauses */}
       <section>
