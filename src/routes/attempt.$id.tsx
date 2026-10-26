@@ -22,7 +22,7 @@ import { completeTranscript } from "@/lib/local-transcription";
 import { hashText, mergeRecommendations, speechRecommendations, textMetrics } from "@/lib/analysis";
 import { fillerFrequency } from "@/lib/fillers";
 import { analyzeStructure } from "@/lib/structure.functions";
-import { accuracyVerdict, ANALYSIS_VERSION } from "@/lib/subject-analysis";
+import { accuracyVerdict, ANALYSIS_VERSION, shouldAnalyzeAutomatically } from "@/lib/subject-analysis";
 import { PRACTICE_TYPES, type Attempt, type Practice } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -265,7 +265,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
   }
 
   useEffect(() => {
-    if ((!sa || stale) && transcript.trim() && practice.type !== "memorize" && !editing && !aiBusy && !savedError && autoRan.current !== analysisHash) {
+    if (shouldAnalyzeAutomatically({ type: practice.type, transcript, needsAnalysis: !sa || stale, editing, busy: aiBusy, failed: !!savedError, started: autoRan.current === analysisHash })) {
       autoRan.current = analysisHash;
       void runAI();
     }

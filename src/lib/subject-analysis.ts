@@ -13,6 +13,10 @@ export function supportsSubjectAccuracy(type: PracticeType) {
   return type !== "memorize";
 }
 
+export function shouldAnalyzeAutomatically(input: { type: PracticeType; transcript: string; needsAnalysis: boolean; busy: boolean; editing: boolean; failed: boolean; started: boolean }) {
+  return supportsSubjectAccuracy(input.type) && !!input.transcript.trim() && input.needsAnalysis && !input.busy && !input.editing && !input.failed && !input.started;
+}
+
 export const accuracySchema = z.object({
   basis: z.enum(["source", "general_knowledge"]),
   summary: z.string(),
