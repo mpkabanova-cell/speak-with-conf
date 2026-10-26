@@ -320,6 +320,19 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
         </p>
       </section>
 
+      {/* Metrics */}
+      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
+        <Metric
+          label="Продолжительность"
+          value={fmtTime(dur)}
+          sub={targetDiff != null ? `${targetDiff >= 0 ? "+" : "−"}${fmtTime(Math.abs(targetDiff))} от цели` : undefined}
+        />
+        <Metric label="Слов" value={String(attempt.word_count ?? 0)} />
+        <Metric label="Средний темп" value={String(attempt.speech_rate ?? 0)} sub="слов в минуту" />
+        <Metric label="Слова-паразиты" value={String(fillers.length)} sub={freq.slice(0, 2).map((f) => `«${f.word}» ×${f.count}`).join(", ") || "не обнаружены"} />
+        <Metric label="Длинные паузы" value={String(pauses.length)} sub="от 2 секунд" />
+      </section>
+
       {/* Content report */}
       {practice.type !== "memorize" && <section>
         <h2 className="text-xl font-bold">Проверка содержания</h2>
@@ -337,19 +350,6 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
         )}
         {sa && !stale && <ContentReport analysis={sa} practice={practice} />}
       </section>}
-
-      {/* Metrics */}
-      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
-        <Metric
-          label="Продолжительность"
-          value={fmtTime(dur)}
-          sub={targetDiff != null ? `${targetDiff >= 0 ? "+" : "−"}${fmtTime(Math.abs(targetDiff))} от цели` : undefined}
-        />
-        <Metric label="Слов" value={String(attempt.word_count ?? 0)} />
-        <Metric label="Средний темп" value={String(attempt.speech_rate ?? 0)} sub="слов в минуту" />
-        <Metric label="Слова-паразиты" value={String(fillers.length)} sub={freq.slice(0, 2).map((f) => `«${f.word}» ×${f.count}`).join(", ") || "не обнаружены"} />
-        <Metric label="Длинные паузы" value={String(pauses.length)} sub="от 2 секунд" />
-      </section>
 
       {/* Recommendations */}
       <section>
