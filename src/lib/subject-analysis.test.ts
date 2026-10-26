@@ -17,11 +17,17 @@ describe("Subject accuracy rules", () => {
   });
   it("validates concrete discrepancy against project source", () => expect(validateAnalysis(output(), input).accuracy.findings[0]?.correction).toBe("10 учеников"));
   it("rejects invented transcript evidence", () => {
-    const result = output(); result.accuracy.findings[0].quote = "30 учеников";
+    const result = output();
+    const finding = result.accuracy.findings[0];
+    if (!finding) throw new Error("Missing fixture");
+    finding.quote = "30 учеников";
     expect(() => validateAnalysis(result, input)).toThrow("Invalid transcript quote");
   });
   it("rejects invented source evidence", () => {
-    const result = output(); result.accuracy.findings[0].source_quote = "5 учеников";
+    const result = output();
+    const finding = result.accuracy.findings[0];
+    if (!finding) throw new Error("Missing fixture");
+    finding.source_quote = "5 учеников";
     expect(() => validateAnalysis(result, input)).toThrow("Invalid source quote");
   });
   it("rejects source contradictions without evidence", () => {
