@@ -113,8 +113,8 @@ function AttemptPage() {
   }
 
   useEffect(() => {
-    if (attempt && practice && practice.type !== "memorize" && (attempt.status === "recorded" || attempt.status === "transcribing") && !running.current) {
-      void runPipeline(attempt, practice);
+    if (attempt && practice && (attempt.status === "recorded" || attempt.status === "transcribing") && !running.current) {
+      void runPipeline(attempt, practice, practice.type === "memorize");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt?.id, attempt?.status, practice?.id]);
@@ -141,24 +141,8 @@ function AttemptPage() {
       </div>
       <StoredAudio audioKey={attempt.audio_reference} className="mt-6 w-full" />
 
-      {practice.type === "memorize" && !stage && (
-        <section className="mt-6 border-y py-5">
-          <h2 className="font-bold">{attempt.transcription_model === "openai/gpt-transcribe" ? "Расшифровка GPT Transcribe" : "Распознавание наизусть · GPT Transcribe"}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Для распознавания запись будет отправлена в облако OpenAI через Lovable AI. Запрос расходует кредиты сервиса. Исходный текст не отправляется; модель может ошибаться.</p>
-          <label className="mt-3 flex items-start gap-2 text-sm">
-            <Checkbox checked={cloudConsent} onCheckedChange={v => setCloudConsent(v === true)} aria-label="Согласие на отправку аудио" />
-            Согласен отправить эту аудиозапись для распознавания
-          </label>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button disabled={!cloudConsent} onClick={() => void runPipeline(attempt, practice, true)}><ShieldCheck />{attempt.transcript ? "Распознать заново в облаке" : "Распознать в облаке"}</Button>
-            <Button variant="outline" onClick={() => void runPipeline(attempt, practice, false)}>Распознать на устройстве</Button>
-          </div>
-          {attempt.status === "error" && <p role="alert" className="mt-3 text-sm text-destructive">{attempt.error}</p>}
-        </section>
-      )}
-
       {attempt.status !== "ready" ? (
-        (practice.type !== "memorize" || stage) && <ProcessingState attempt={attempt} stage={stage} cloud={usingCloud} partialText={partialText} onRetry={() => void update({ ...attempt, status: "recorded", error: null })} practiceId={practice.id} />
+        <ProcessingState attempt={attempt} stage={stage} cloud={usingCloud} partialText={partialText} onRetry={() => void update({ ...attempt, status: "recorded", error: null })} practiceId={practice.id} />
       ) : (
         <Results attempt={attempt} practice={practice} update={update} index={data.index} />
       )}
@@ -198,9 +182,7 @@ function ProcessingState({ attempt, stage, onRetry, practiceId, cloud = false, p
           </li>
         ))}
       </ul>
-      <p className="mt-5 text-xs text-muted-foreground">
-        {cloud ? "GPT Transcribe обрабатывает запись в облаке. Длительность и паузы измеряются на устройстве." : "Распознавание работает прямо в браузере — аудио никуда не отправляется. Первая загрузка модели может занять пару минут, потом она сохранится."}
-      </p>
+      {!cloud && <p className="mt-5 text-xs text-muted-foreground">Первая загрузка может занять пару минут.</p>}
       {cloud && partialText && <p aria-live="polite" className="mt-4 whitespace-pre-wrap text-sm leading-7">{partialText}</p>}
     </div>
   );
