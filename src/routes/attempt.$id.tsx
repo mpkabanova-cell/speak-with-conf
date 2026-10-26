@@ -21,6 +21,7 @@ import { cloudTranscribe } from "@/lib/cloud-transcribe";
 import { hashText, mergeRecommendations, speechRecommendations, textMetrics } from "@/lib/analysis";
 import { fillerFrequency } from "@/lib/fillers";
 import { analyzeStructure } from "@/lib/structure.functions";
+import { ANALYSIS_VERSION } from "@/lib/subject-analysis";
 import { PRACTICE_TYPES, type Attempt, type Practice } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -230,7 +231,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
   const freq = fillerFrequency(fillers);
   const dur = attempt.duration_ms / 1000;
   const sa = attempt.structure_analysis;
-  const stale = !!sa && sa.transcript_hash !== hashText(transcript);
+  const stale = !!sa && (sa.transcript_hash !== hashText(transcript) || sa.analysis_version !== ANALYSIS_VERSION);
 
   async function runAI() {
     if (practice.type === "memorize") return;
@@ -242,7 +243,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
         setAiError(r.error);
         return;
       }
-      const structure_analysis = { ...r.result, transcript_hash: hashText(transcript) };
+      const structure_analysis = { ...r.result, transcript_hash: hashText(transcript), analysis_version: ANALYSIS_VERSION };
       await update({
         ...attempt,
         structure_analysis,
@@ -333,22 +334,22 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
         </section>
       )}
 
-      {practice.type === "retelling" && practice.source_text && (
+      {(practice.type === "retelling" || practice.type === "project") && practice.source_text && (
         <details className="rounded-2xl border p-5">
-          <summary className="cursor-pointer font-bold">Исходный текст для пересказа</summary>
+          <summary className="cursor-pointer font-bold">{practice.type === "project" ? "Материалы проекта" : "Исходный текст для пересказа"}</summary>
           <p className="mt-3 max-w-prose whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{practice.source_text}</p>
         </details>
       )}
 
       {/* Structure */}
       {practice.type !== "memorize" && <section>
-        <h2 className="text-xl font-bold">Структура выступления</h2>
+        <h2 className="text-xl font-bold">Структура и предметная точность</h2>
         {!sa || stale ? (
           <div className="mt-4 rounded-2xl border p-5">
-            {stale && <p className="mb-3 text-sm font-semibold text-sun-deep">Расшифровка изменилась — структуру можно проанализировать заново.</p>}
+            {stale && <p className="mb-3 text-sm font-semibold text-sun-deep">Проверка требует обновления — проанализируй содержание заново.</p>}
             <p className="flex items-start gap-2 text-sm text-muted-foreground">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-deep" />
-              Для анализа структуры текст расшифровки (без аудио) будет отправлен во внешний ИИ-сервис. Запись и показатели остаются в браузере.
+              Для проверки структуры и предметной точности текст расшифровки{practice.source_text ? " и исходные материалы" : ""} (без аудио) будут отправлены во внешний ИИ-сервис. Запись и показатели остаются в браузере.
             </p>
             {aiError && <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-destructive"><AlertCircle className="size-4" /> {aiError}</p>}
             <div className="mt-4 flex flex-wrap items-center gap-4">
@@ -359,7 +360,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
                 }}
                 disabled={aiBusy}
               >
-                {aiBusy ? <><Loader2 className="animate-spin" /> Генерирую рекомендации…</> : aiError ? "Попробовать снова" : "Проанализировать структуру"}
+                {aiBusy ? <><Loader2 className="animate-spin" /> Проверяю содержание…</> : aiError ? "Попробовать снова" : "Проверить структуру и точность"}
               </Button>
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox checked={remember} onCheckedChange={(v) => setRemember(v === true)} /> Больше не спрашивать
@@ -391,6 +392,25 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
                   {sa.sequence_issues.map((s, i) => <li key={i}>{s}</li>)}
                 </ul>
+              </div>
+            )}
+            {sa.accuracy && (
+              <div className="mt-6 border-t pt-5">
+                <h3 className="text-lg font-bold">Предметная точность</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{sa.accuracy.basis === "source" ? "Сверка с исходными материалами" : "Проверка по общим предметным знаниям; без проверки внешних источников"}</p>
+                <p className="mt-3 text-sm">{sa.accuracy.summary}</p>
+                <ul className="mt-4 divide-y">
+                  {sa.accuracy.findings.map((finding, i) => (
+                    <li key={i} className="py-4">
+                      <p className={cn("text-sm font-bold", finding.status === "error" ? "text-destructive" : "text-sun-deep")}>{finding.status === "error" ? "Неточность" : "Нужно уточнить"}</p>
+                      <p className="mt-2 border-l-2 border-brand-light pl-3 text-sm italic">«{finding.quote}»</p>
+                      <p className="mt-2 text-sm text-muted-foreground">{finding.explanation}</p>
+                      {finding.source_quote && <p className="mt-2 text-sm">В материалах: «{finding.source_quote}»</p>}
+                      {finding.correction && <p className="mt-2 text-sm font-semibold">{finding.correction}</p>}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">ИИ может ошибаться. Спорные утверждения проверь с учителем или по учебнику.</p>
               </div>
             )}
           </div>
