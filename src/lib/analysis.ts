@@ -1,5 +1,6 @@
 import { countWords, fillerFrequency, findFillers } from "./fillers";
 import { fmtSec, fmtTime } from "./audio-analysis";
+import { compareRecitation } from "./recite";
 import type { Attempt, Practice, Recommendation } from "./types";
 
 export function textMetrics(transcript: string, durationMs: number) {
@@ -18,6 +19,24 @@ export function hashText(t: string) {
 /** Recommendations grounded in measured speech data (fillers, pauses, duration). */
 export function speechRecommendations(a: Attempt, p: Practice): Recommendation[] {
   const out: Recommendation[] = [];
+  if (p.type === "memorize" && p.source_text && a.transcript) {
+    const r = compareRecitation(p.source_text, a.transcript);
+    const firstMiss = r.tokens.findIndex((t) => t.status === "missed");
+    if (r.missed) {
+      const before = r.tokens.slice(Math.max(0, firstMiss - 3), firstMiss).map((t) => t.text).join(" ");
+      out.push({
+        source: "speech",
+        text: `Пропущено слов: ${r.missed}. Первый пропуск — «${r.tokens[firstMiss]!.text}»${before ? ` после «${before}»` : ""}. Повтори этот фрагмент отдельно несколько раз.`,
+      });
+    }
+    const wrongs = r.tokens.filter((t) => t.status === "wrong").slice(0, 2);
+    if (wrongs.length) {
+      out.push({
+        source: "speech",
+        text: `Сказано иначе: ${wrongs.map((t) => `«${t.said}» вместо «${t.text}»`).join(", ")}${r.wrong > 2 ? ` и ещё ${r.wrong - 2}` : ""}. Проговори эти места медленно, глядя в текст.`,
+      });
+    }
+  }
   const freq = fillerFrequency(a.filler_words ?? []);
   const f = freq[0];
   if (f && f.count >= 2) {
