@@ -21,7 +21,7 @@ import { cloudTranscribe } from "@/lib/cloud-transcribe";
 import { hashText, mergeRecommendations, speechRecommendations, textMetrics } from "@/lib/analysis";
 import { fillerFrequency } from "@/lib/fillers";
 import { analyzeStructure } from "@/lib/structure.functions";
-import { ANALYSIS_VERSION } from "@/lib/subject-analysis";
+import { accuracyVerdict, ANALYSIS_VERSION } from "@/lib/subject-analysis";
 import { PRACTICE_TYPES, type Attempt, type Practice } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -214,16 +214,15 @@ function Metric({ label, value, sub }: { label: string; value: string; sub?: str
   );
 }
 
-const CONSENT_KEY = "su-ai-consent";
-
 function Results({ attempt, practice, update, index }: { attempt: Attempt; practice: Practice; update: (a: Attempt) => Promise<void>; index: number }) {
   const analyze = useServerFn(analyzeStructure);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [remember, setRemember] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(attempt.transcript ?? "");
-  const autoRan = useRef(false);
+  const autoRan = useRef<string | null>(null);
+  const latestAttempt = useRef(attempt);
+  latestAttempt.current = attempt;
 
   const transcript = attempt.transcript ?? "";
   const fillers = attempt.filler_words ?? [];
@@ -233,36 +232,44 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
   const sa = attempt.structure_analysis;
   const stale = !!sa && (sa.transcript_hash !== hashText(transcript) || sa.analysis_version !== ANALYSIS_VERSION);
 
+  const analysisHash = hashText(`${ANALYSIS_VERSION}:${transcript}:${practice.prompt}:${practice.source_text ?? ""}`);
+  const savedError = attempt.analysis_error?.hash === analysisHash ? attempt.analysis_error.message : null;
+  const verdict = sa?.accuracy ? accuracyVerdict(sa.accuracy.findings) : null;
+
   async function runAI() {
-    if (practice.type === "memorize") return;
+    if (practice.type === "memorize" || aiBusy) return;
     setAiBusy(true);
     setAiError(null);
     try {
       const r = await analyze({ data: { type: practice.type, prompt: practice.prompt, transcript: transcript.slice(0, 20000), source_text: practice.source_text?.slice(0, 20000) ?? null } });
       if (!r.ok) {
         setAiError(r.error);
+        await update({ ...latestAttempt.current, analysis_error: { hash: analysisHash, message: r.error } });
         return;
       }
       const structure_analysis = { ...r.result, transcript_hash: hashText(transcript), analysis_version: ANALYSIS_VERSION };
       await update({
-        ...attempt,
+        ...latestAttempt.current,
+        analysis_error: null,
         structure_analysis,
         recommendations: mergeRecommendations(speechRecommendations(attempt, practice), r.result.recommendations),
       });
     } catch {
-      setAiError("ИИ-сервис временно недоступен. Показатели и расшифровка сохранены.");
+      const message = "ИИ-сервис временно недоступен. Показатели и расшифровка сохранены.";
+      setAiError(message);
+      await update({ ...latestAttempt.current, analysis_error: { hash: analysisHash, message } });
     } finally {
       setAiBusy(false);
     }
   }
 
   useEffect(() => {
-    if (!sa && practice.type !== "memorize" && !autoRan.current && typeof window !== "undefined" && localStorage.getItem(CONSENT_KEY) === "1") {
-      autoRan.current = true;
+    if ((!sa || stale) && transcript.trim() && practice.type !== "memorize" && !editing && !aiBusy && !savedError && autoRan.current !== analysisHash) {
+      autoRan.current = analysisHash;
       void runAI();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [analysisHash, stale, editing, aiBusy, savedError]);
 
   async function saveEdit() {
     const t = draft.trim();
@@ -271,7 +278,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
       return;
     }
     const next: Attempt = { ...attempt, transcript: t, transcript_edited: true, ...textMetrics(t, attempt.duration_ms) };
-    next.recommendations = mergeRecommendations(speechRecommendations(next, practice), next.structure_analysis?.recommendations ?? []);
+    next.recommendations = mergeRecommendations(speechRecommendations(next, practice), []);
     await update(next);
     setEditing(false);
     toast.success("Расшифровка обновлена, показатели пересчитаны");
@@ -287,6 +294,31 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
           <span aria-hidden>→</span>
         </Link>
       )}
+      {/* Transcript */}
+      <section>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold">Расшифровка</h2>
+          {!editing && <Button variant="ghost" size="sm" disabled={aiBusy} onClick={() => { setDraft(transcript); setEditing(true); }}><Pencil /> Исправить</Button>}
+        </div>
+        <div className="mt-4 rounded-2xl bg-surface p-5 md:p-7">
+          {editing ? (
+            <>
+              <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="min-h-60 bg-background text-base leading-7" />
+              <p className="mt-2 text-xs text-muted-foreground">Количество слов, темп и слова-паразиты пересчитаются. Длительность и паузы взяты из аудио и не изменятся.</p>
+              <div className="mt-3 flex gap-2">
+                <Button onClick={saveEdit}>Сохранить</Button>
+                <Button variant="ghost" onClick={() => setEditing(false)}>Отмена</Button>
+              </div>
+            </>
+          ) : (
+            <TranscriptView text={transcript} fillers={fillers} pauses={attempt.transcript_edited ? [] : pauses} chunks={attempt.chunks} />
+          )}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          <mark className="filler-mark">Подсвечены</mark> обнаруженные слова-паразиты. Распознавание может ошибаться, в том числе в последнем слове. Исправь текст после прослушивания — содержание будет проверено заново.
+        </p>
+      </section>
+
       {/* Metrics */}
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
         <Metric
@@ -344,32 +376,41 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
       {/* Structure */}
       {practice.type !== "memorize" && <section>
         <h2 className="text-xl font-bold">Структура и предметная точность</h2>
-        {!sa || stale ? (
-          <div className="mt-4 rounded-2xl border p-5">
-            {stale && <p className="mb-3 text-sm font-semibold text-sun-deep">Проверка требует обновления — проанализируй содержание заново.</p>}
-            <p className="flex items-start gap-2 text-sm text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-deep" />
-              Для проверки структуры и предметной точности текст расшифровки{practice.source_text ? " и исходные материалы" : ""} (без аудио) будут отправлены во внешний ИИ-сервис. Запись и показатели остаются в браузере.
-            </p>
-            {aiError && <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-destructive"><AlertCircle className="size-4" /> {aiError}</p>}
-            <div className="mt-4 flex flex-wrap items-center gap-4">
-              <Button
-                onClick={() => {
-                  if (remember) localStorage.setItem(CONSENT_KEY, "1");
-                  void runAI();
-                }}
-                disabled={aiBusy}
-              >
-                {aiBusy ? <><Loader2 className="animate-spin" /> Проверяю содержание…</> : aiError ? "Попробовать снова" : "Проверить структуру и точность"}
-              </Button>
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Checkbox checked={remember} onCheckedChange={(v) => setRemember(v === true)} /> Больше не спрашивать
-              </label>
-            </div>
+        <p className="mt-2 text-xs text-muted-foreground">Проверяется текст расшифровки{practice.source_text ? " и исходные материалы" : ""}, без отправки аудио.</p>
+        {(!sa || stale) && (
+          <div className="mt-4 border-y py-5" aria-live="polite">
+            {aiBusy || !(aiError || savedError) ? (
+              <p className="flex items-center gap-2 text-sm font-semibold"><Loader2 className="size-4 animate-spin" /> Проверяю тему, утверждения и порядок изложения…</p>
+            ) : (
+              <>
+                <p role="alert" className="text-sm text-destructive">{aiError || savedError}</p>
+                <Button className="mt-3" onClick={() => void runAI()}><RotateCcw /> Повторить проверку</Button>
+              </>
+            )}
           </div>
-        ) : null}
-        {sa && (
+        )}
+        {sa && !stale && (
           <div className={cn("mt-4", stale && "opacity-60")}>
+            <div className="mb-6 space-y-5 border-y py-5">
+              {sa.relevance && <div>
+                <h3 className="text-lg font-bold">Соответствие теме</h3>
+                <p className="mt-2 font-semibold">{{ on_topic: "Ответ соответствует теме", partial: "Ответ частично соответствует теме", off_topic: "Ответ не соответствует теме", uncertain: "Не удалось определить соответствие теме" }[sa.relevance.status]}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{sa.relevance.explanation}</p>
+              </div>}
+              {verdict && <div>
+                <h3 className="text-lg font-bold">Верность утверждений</h3>
+                <p className={cn("mt-2 font-semibold", verdict.errors ? "text-destructive" : "text-brand-deep")}>{verdict.label}</p>
+                {verdict.uncertain > 0 && <p className="mt-1 text-sm text-sun-deep">Нужно уточнить: {verdict.uncertain}. Это не подтверждённые ошибки.</p>}
+                <p className="mt-2 text-sm">{sa.accuracy?.summary}</p>
+                <ul className="mt-3 divide-y">{sa.claims?.map((claim, i) => <li key={i} className="py-3">
+                  <p className={cn("text-sm font-bold", claim.status === "error" ? "text-destructive" : claim.status === "correct" ? "text-brand-deep" : "text-sun-deep")}>{{ correct: "Верное утверждение", error: "Ошибка в утверждении", uncertain: "Нужно уточнить" }[claim.status]}</p>
+                  <p className="mt-1 text-sm italic">«{claim.quote}»</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{claim.explanation}</p>
+                </li>)}</ul>
+              </div>}
+            </div>
+            <h3 className="mb-3 text-lg font-bold">Структура ответа</h3>
+            <p className="mb-3 text-xs text-muted-foreground">Наличие части ответа не означает, что утверждение в ней верно.</p>
             <ul className="divide-y rounded-2xl border">
               {sa.elements.map((e, i) => (
                 <li key={i} className="flex gap-4 p-4">
@@ -402,7 +443,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
                 <ul className="mt-4 divide-y">
                   {sa.accuracy.findings.map((finding, i) => (
                     <li key={i} className="py-4">
-                      <p className={cn("text-sm font-bold", finding.status === "error" ? "text-destructive" : "text-sun-deep")}>{finding.status === "error" ? "Неточность" : "Нужно уточнить"}</p>
+                      <p className={cn("text-sm font-bold", finding.status === "error" ? "text-destructive" : "text-sun-deep")}>{finding.status === "error" ? "Ошибка" : "Нужно уточнить"}</p>
                       <p className="mt-2 border-l-2 border-brand-light pl-3 text-sm italic">«{finding.quote}»</p>
                       <p className="mt-2 text-sm text-muted-foreground">{finding.explanation}</p>
                       {finding.source_quote && <p className="mt-2 text-sm">В материалах: «{finding.source_quote}»</p>}
@@ -431,31 +472,6 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
           <p className="mt-3 text-sm text-muted-foreground">Пауз длиннее 2 секунд не обнаружено.</p>
         )}
         <p className="mt-2 text-xs text-muted-foreground">Паузы определяются по громкости звука; фоновый шум может влиять на точность.</p>
-      </section>
-
-      {/* Transcript */}
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Расшифровка</h2>
-          {!editing && <Button variant="ghost" size="sm" onClick={() => { setDraft(transcript); setEditing(true); }}><Pencil /> Исправить</Button>}
-        </div>
-        <div className="mt-4 rounded-2xl bg-surface p-5 md:p-7">
-          {editing ? (
-            <>
-              <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="min-h-60 bg-background text-base leading-7" />
-              <p className="mt-2 text-xs text-muted-foreground">Количество слов, темп и слова-паразиты пересчитаются. Длительность и паузы взяты из аудио и не изменятся.</p>
-              <div className="mt-3 flex gap-2">
-                <Button onClick={saveEdit}>Сохранить</Button>
-                <Button variant="ghost" onClick={() => setEditing(false)}>Отмена</Button>
-              </div>
-            </>
-          ) : (
-            <TranscriptView text={transcript} fillers={fillers} pauses={attempt.transcript_edited ? [] : pauses} chunks={attempt.chunks} />
-          )}
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          <mark className="filler-mark">Подсвечены</mark> обнаруженные слова-паразиты. Распознавание может пропускать «э-э» и запинки, поэтому их реальное число может быть больше.
-        </p>
       </section>
 
       {/* Next */}
