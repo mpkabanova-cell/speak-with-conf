@@ -133,7 +133,7 @@ export function compareRecitation(source: string, spoken: string, accepted: numb
   const acc = new Set(accepted);
   expIdx.forEach((ti, k) => {
     const t = tokens[ti]!;
-    if (acc.has(k) && t.status !== "ok") { t.status = "ok"; t.said = undefined; }
+    if (acc.has(k) && t.status !== "ok") { t.status = "ok"; delete t.said; }
     if (t.status === "ok") matched++;
     else if (t.status === "fuzzy") fuzzy++;
     else if (t.status === "missed") missed++;
