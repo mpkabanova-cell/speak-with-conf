@@ -15,5 +15,5 @@
 - Pauses come from audio energy VAD (`src/lib/audio-analysis.ts`), never from transcript punctuation.
 - Only the transcript text goes to the server function `src/lib/structure.functions.ts` (Lovable AI Gateway), after explicit user consent; output is Zod-validated.
 - Comparison summaries are computed deterministically from measured data in `src/lib/analysis.ts`, not by AI, so they reflect real changes.
-- Recitation («Наизусть») check is a deterministic word-level LCS diff in `src/lib/recite.ts` (case/punctuation ignored), never AI — so mismatches are exact and reproducible.
+- Recitation («Наизусть») check is a deterministic similarity-weighted word alignment in `src/lib/recite.ts` (case/punctuation ignored, small recognition slips tolerated, student can accept words), never AI — so mismatches are exact and reproducible.
 - Photo/PDF source text is OCR'd by `extractSourceText` (AI Gateway) only on explicit upload; the student edits the result, and the edited text is the reference. Whisper language comes from `Practice.language`.
