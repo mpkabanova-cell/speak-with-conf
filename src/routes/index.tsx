@@ -11,9 +11,9 @@ import { plural } from "@/lib/analysis";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Скажи уверенно — говори увереннее с каждой попыткой" },
+      { title: "Говори уверенно — говори увереннее с каждой попыткой" },
       { name: "description", content: "Запиши выступление, узнай, что можно улучшить, и сравни свой результат. Тренажёр устной речи для 5–11 классов." },
-      { property: "og:title", content: "Скажи уверенно — тренажёр устных выступлений" },
+      { property: "og:title", content: "Говори уверенно — тренажёр устных выступлений" },
       { property: "og:description", content: "Запиши выступление, узнай, что можно улучшить, и сравни свой результат." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

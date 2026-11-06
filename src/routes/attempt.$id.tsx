@@ -29,9 +29,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/attempt/$id")({
   head: () => ({
     meta: [
-      { title: "Анализ выступления — Скажи уверенно" },
+      { title: "Анализ выступления — Говори уверенно" },
       { name: "description", content: "Показатели речи, рекомендации, структура и расшифровка выступления." },
-      { property: "og:title", content: "Анализ выступления — Скажи уверенно" },
+      { property: "og:title", content: "Анализ выступления — Говори уверенно" },
       { property: "og:description", content: "Показатели речи, рекомендации и расшифровка." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

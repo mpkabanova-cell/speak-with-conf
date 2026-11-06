@@ -19,9 +19,9 @@ export const Route = createFileRoute("/practice/$id/compare")({
   validateSearch: search,
   head: () => ({
     meta: [
-      { title: "Сравнение выступлений — Скажи уверенно" },
+      { title: "Сравнение выступлений — Говори уверенно" },
       { name: "description", content: "Сравни две попытки и посмотри, как изменилась речь." },
-      { property: "og:title", content: "Сравнение выступлений — Скажи уверенно" },
+      { property: "og:title", content: "Сравнение выступлений — Говори уверенно" },
       { property: "og:description", content: "Сравни две попытки и посмотри на прогресс." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

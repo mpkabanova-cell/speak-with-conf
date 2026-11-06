@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/practice/$id/record")({
   head: () => ({
     meta: [
-      { title: "Запись выступления — Скажи уверенно" },
+      { title: "Запись выступления — Говори уверенно" },
       { name: "description", content: "Запиши своё выступление через микрофон." },
-      { property: "og:title", content: "Запись выступления — Скажи уверенно" },
+      { property: "og:title", content: "Запись выступления — Говори уверенно" },
       { property: "og:description", content: "Запиши своё выступление через микрофон." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

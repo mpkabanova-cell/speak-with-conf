@@ -14,9 +14,9 @@ import { fmtTime } from "@/lib/audio-analysis";
 export const Route = createFileRoute("/practice/$id/")({
   head: () => ({
     meta: [
-      { title: "Тренировка — Скажи уверенно" },
+      { title: "Тренировка — Говори уверенно" },
       { name: "description", content: "Попытки по теме, прослушивание и сравнение." },
-      { property: "og:title", content: "Тренировка — Скажи уверенно" },
+      { property: "og:title", content: "Тренировка — Говори уверенно" },
       { property: "og:description", content: "Попытки по теме, прослушивание и сравнение." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
