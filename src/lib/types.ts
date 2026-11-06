@@ -29,6 +29,8 @@ export interface Practice {
   source_text?: string | null;
   /** Speech language for recognition; defaults to russian */
   language?: LanguageCode;
+  /** Student/teacher criteria for project defence, one per line */
+  custom_criteria?: string | null;
 }
 
 export interface FillerHit {
