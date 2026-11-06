@@ -11,6 +11,7 @@ import { StoredAudio } from "@/components/AudioPlayer";
 import { PauseTimeline, TranscriptView } from "@/components/Transcript";
 import { ReciteView } from "@/components/ReciteView";
 import { ContentReport } from "@/components/ContentReport";
+import { slideDuplication } from "@/lib/subject-analysis";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { attemptQuery } from "@/lib/queries";
@@ -327,6 +328,19 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
             )}
           </div>
         )}
+        {practice.type === "project" && practice.source_is_slides && practice.source_text && (() => {
+          const d = slideDuplication(transcript, practice.source_text);
+          if (!d) return null;
+          const pct = Math.round(d.share * 100);
+          return (
+            <div className={`mt-4 rounded-2xl p-4 text-sm ${d.ok ? "bg-brand-soft" : "bg-sun-soft"}`}>
+              <p className="font-bold">Дублирование слайдов: {pct}% {d.ok ? "— в норме" : "— больше 50%"}</p>
+              <p className="mt-1 text-muted-foreground">
+                {d.ok ? "Речь дополняет презентацию, а не пересказывает её дословно." : "Большая часть речи повторяет текст слайдов. Объясняй своими словами и добавляй то, чего нет на слайдах: примеры, выводы, пояснения."}
+              </p>
+            </div>
+          );
+        })()}
         {sa && !stale && <ContentReport analysis={sa} practice={practice} />}
       </section>}
 

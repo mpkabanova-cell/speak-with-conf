@@ -31,6 +31,8 @@ export interface Practice {
   language?: LanguageCode;
   /** Student/teacher criteria for project defence, one per line */
   custom_criteria?: string | null;
+  /** Project materials are presentation slides: speech should complement them */
+  source_is_slides?: boolean;
 }
 
 export interface FillerHit {

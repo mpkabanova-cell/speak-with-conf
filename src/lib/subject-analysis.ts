@@ -49,9 +49,13 @@ const criteria = {
 };
 
 /** Criteria names shown to the student before recording a project defence. */
-export function projectCriteria(hasSource: boolean, custom?: string | null | undefined) {
+export const SLIDE_DUPLICATION_LIMIT = 0.5;
+export const SLIDES_CRITERION = "Речь дополняет слайды, а не читает их (дублирование не больше 50%)";
+
+export function projectCriteria(hasSource: boolean, custom?: string | null | undefined, slides = false) {
   const base = ["Проблема и актуальность", "Цель", "Решение", "Результаты", "Вывод"];
   if (hasSource) base.push("Соответствие материалам", "Последовательность по материалам");
+  if (hasSource && slides) base.push(SLIDES_CRITERION);
   return { base, custom: parseCustomCriteria(custom) };
 }
 
@@ -105,4 +109,17 @@ export function accuracyVerdict(findings: { status: "error" | "uncertain" }[]) {
   const errors = findings.filter(f => f.status === "error").length;
   const uncertain = findings.filter(f => f.status === "uncertain").length;
   return { errors, uncertain, label: errors ? `Найдены ошибки: ${errors}` : uncertain ? "Нужны уточнения" : "Подтверждённых ошибок не найдено" };
+}
+const words = (t: string) => t.toLowerCase().replace(/ё/g, "е").match(/[\p{L}\p{N}]+/gu) ?? [];
+
+/** Deterministic share of spoken word triples that also appear on the slides. */
+export function slideDuplication(transcript: string, slides: string) {
+  const w = words(transcript), sw = words(slides);
+  if (w.length < 3 || sw.length < 3) return null;
+  const set = new Set<string>();
+  for (let i = 0; i + 2 < sw.length; i++) set.add(`${sw[i]} ${sw[i + 1]} ${sw[i + 2]}`);
+  const covered = new Array<boolean>(w.length).fill(false);
+  for (let i = 0; i + 2 < w.length; i++) if (set.has(`${w[i]} ${w[i + 1]} ${w[i + 2]}`)) covered[i] = covered[i + 1] = covered[i + 2] = true;
+  const share = covered.filter(Boolean).length / w.length;
+  return { share, ok: share <= SLIDE_DUPLICATION_LIMIT };
 }
