@@ -65,3 +65,10 @@ it2("custom project criteria reach the analysis prompt", () => {
   ex2(bai({ type: "project", prompt: "п", transcript: "т", custom_criteria: "Есть презентация" })).toContain('"Есть презентация"');
   ex2(bai({ type: "answer", prompt: "п", transcript: "т", custom_criteria: "Есть презентация" })).not.toContain("Есть презентация");
 });
+
+import { slideDuplication as sd } from "./subject-analysis";
+it2("slide duplication allowed up to 50%", () => {
+  const slides = "пластик разлагается сотни лет и загрязняет океан";
+  ex2(sd("пластик разлагается сотни лет и загрязняет океан", slides)?.ok).toBe(false);
+  ex2(sd("пластик разлагается сотни лет поэтому мы собрали в школе крышки и сдали их на переработку", slides)?.ok).toBe(true);
+});

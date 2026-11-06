@@ -183,7 +183,7 @@ function RecordPage() {
         )}
 
         {p?.type === "project" && !recording && (
-          <CriteriaPanel className="mt-6 w-full text-left" hasSource={!!p.source_text} custom={p.custom_criteria} />
+          <CriteriaPanel className="mt-6 w-full text-left" hasSource={!!p.source_text} slides={!!p.source_is_slides} custom={p.custom_criteria} />
         )}
 
         <p className={cn("num mt-12 text-7xl font-extrabold md:text-8xl", recording ? "text-foreground" : "text-muted-foreground")}>

@@ -77,6 +77,7 @@ function NewPractice() {
   const [langTouched, setLangTouched] = useState(false);
   const [reading, setReading] = useState(false);
   const [criteria, setCriteria] = useState("");
+  const [slides, setSlides] = useState(false);
   const extract = useServerFn(extractSourceText);
   const needsSource = type === "memorize";
   const showSource = type === "retelling" || type === "memorize" || type === "project";
@@ -127,6 +128,7 @@ function NewPractice() {
         target_duration: parsed.data.minutes ? Math.round(parsed.data.minutes * 60) : null,
         created_at: Date.now(),
         source_text: showSource && src ? src : null,
+        source_is_slides: type === "project" && !!src && slides,
         custom_criteria: type === "project" && criteria.trim() ? criteria.trim().slice(0, 5000) : null,
         language: type === "memorize" ? lang : "russian",
       });
@@ -208,6 +210,12 @@ function NewPractice() {
               <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand-deep" />
               Фото и PDF отправляются во внешний ИИ-сервис только для распознавания текста. Проверь результат — сверка идёт именно с ним.
             </p>
+            {type === "project" && (
+              <label className="mt-3 flex items-center gap-2 text-sm font-semibold">
+                <input type="checkbox" checked={slides} onChange={(e) => setSlides(e.target.checked)} className="size-4 accent-[var(--primary)]" />
+                Это презентация (слайды) — речь должна дополнять их, а не читать
+              </label>
+            )}
             {type === "memorize" && (
               <div className="mt-5">
                 <Label className="block text-sm font-bold">Язык текста</Label>
@@ -229,7 +237,7 @@ function NewPractice() {
         )}
 
         {type === "project" && (
-          <CriteriaPanel className="mt-8" hasSource={!!source.trim()} custom={criteria} onChange={setCriteria} />
+          <CriteriaPanel className="mt-8" hasSource={!!source.trim()} slides={slides} custom={criteria} onChange={setCriteria} />
         )}
 
         <Label htmlFor="min" className="mt-6 block text-sm font-bold">

@@ -5,8 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { projectCriteria } from "@/lib/subject-analysis";
 import { cn } from "@/lib/utils";
 
-export function CriteriaPanel({ hasSource, custom, onChange, className }: { hasSource: boolean; custom?: string | null | undefined; onChange?: (v: string) => void; className?: string }) {
-  const { base, custom: list } = projectCriteria(hasSource, custom);
+export function CriteriaPanel({ hasSource, custom, onChange, className, slides = false }: { hasSource: boolean; slides?: boolean; custom?: string | null | undefined; onChange?: (v: string) => void; className?: string }) {
+  const { base, custom: list } = projectCriteria(hasSource, custom, slides);
   async function onFile(file?: File) {
     if (!file || !onChange) return;
     if (!(/^text\//i.test(file.type) || /\.(txt|md|csv)$/i.test(file.name))) return toast.error("Подойдёт текстовый файл (.txt, .md)");
