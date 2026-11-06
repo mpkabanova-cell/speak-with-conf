@@ -89,10 +89,22 @@ function NewPractice() {
     if (d && !langTouched) setLang(d);
   }
 
+  function appendSource(text: string, name: string) {
+    if (!text) return;
+    setSource((prev) => (prev.trim() ? `${prev.trim()}\n\n--- ${name} ---\n${text}` : text));
+    setErr(null);
+    const d = detectLang(text);
+    if (d && !langTouched) setLang(d);
+  }
+
+  async function onFiles(files: FileList | null) {
+    for (const f of Array.from(files ?? [])) await onFile(f);
+  }
+
   async function onFile(file: File | undefined) {
     if (!file) return;
     if (file.size > 15 * 1024 * 1024) return toast.error("Файл слишком большой — до 15 МБ");
-    if (/^text\//i.test(file.type) || /\.(txt|md)$/i.test(file.name)) return onSourceChange((await file.text()).trim());
+    if (/^text\//i.test(file.type) || /\.(txt|md)$/i.test(file.name)) return appendSource((await file.text()).trim(), file.name);
     if (!(file.type.startsWith("image/") || file.type === "application/pdf"))
       return toast.error("Подойдёт фото, PDF или текстовый файл (.txt)");
     setReading(true);
@@ -100,7 +112,7 @@ function NewPractice() {
       const { mime, data } = await toBase64(file);
       const r = await extract({ data: { mime, data, filename: file.name.slice(0, 200) } });
       if (!r.ok) return toast.error(r.error);
-      setSource(r.result.text.trim());
+      appendSource(r.result.text.trim(), file.name);
       if (!langTouched) setLang(r.result.language);
       toast.success("Текст распознан — проверь его и исправь, если нужно");
     } catch {
@@ -188,13 +200,13 @@ function NewPractice() {
               <Button type="button" variant="outline" size="sm" disabled={reading} asChild>
                 <label className="cursor-pointer">
                   <Camera /> Фото
-                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} />
+                  <input type="file" accept="image/*" className="sr-only" multiple onChange={(e) => { const fl = e.target.files; void onFiles(fl).then(() => { e.target.value = ""; }); }} />
                 </label>
               </Button>
               <Button type="button" variant="outline" size="sm" disabled={reading} asChild>
                 <label className="cursor-pointer">
                   <FileUp /> Файл
-                  <input type="file" accept=".txt,.md,text/plain,application/pdf,image/*" className="sr-only" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} />
+                  <input type="file" accept=".txt,.md,text/plain,application/pdf,image/*" className="sr-only" multiple onChange={(e) => { const fl = e.target.files; void onFiles(fl).then(() => { e.target.value = ""; }); }} />
                 </label>
               </Button>
               {reading && <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Распознаю текст…</span>}
@@ -213,7 +225,7 @@ function NewPractice() {
             {type === "project" && (
               <label className="mt-3 flex items-center gap-2 text-sm font-semibold">
                 <input type="checkbox" checked={slides} onChange={(e) => setSlides(e.target.checked)} className="size-4 accent-[var(--primary)]" />
-                Это презентация (слайды) — речь должна дополнять их, а не читать
+                В файлы добавлена презентация выступления
               </label>
             )}
             {type === "memorize" && (
