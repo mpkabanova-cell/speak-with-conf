@@ -49,7 +49,7 @@ const criteria = {
 };
 
 /** Criteria names shown to the student before recording a project defence. */
-export function projectCriteria(hasSource: boolean, custom?: string | null) {
+export function projectCriteria(hasSource: boolean, custom?: string | null | undefined) {
   const base = ["Проблема и актуальность", "Цель", "Решение", "Результаты", "Вывод"];
   if (hasSource) base.push("Соответствие материалам", "Последовательность по материалам");
   return { base, custom: parseCustomCriteria(custom) };

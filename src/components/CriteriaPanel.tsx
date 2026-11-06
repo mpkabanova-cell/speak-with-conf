@@ -5,13 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { projectCriteria } from "@/lib/subject-analysis";
 import { cn } from "@/lib/utils";
 
-export function CriteriaPanel({ hasSource, custom, onChange, className }: { hasSource: boolean; custom?: string | null; onChange?: (v: string) => void; className?: string }) {
+export function CriteriaPanel({ hasSource, custom, onChange, className }: { hasSource: boolean; custom?: string | null | undefined; onChange?: (v: string) => void; className?: string }) {
   const { base, custom: list } = projectCriteria(hasSource, custom);
   async function onFile(file?: File) {
     if (!file || !onChange) return;
     if (!(/^text\//i.test(file.type) || /\.(txt|md|csv)$/i.test(file.name))) return toast.error("Подойдёт текстовый файл (.txt, .md)");
     if (file.size > 200 * 1024) return toast.error("Файл слишком большой — до 200 КБ");
     onChange((await file.text()).trim().slice(0, 5000));
+    return undefined;
   }
   return (
     <details className={cn("group rounded-2xl border bg-card", className)}>
