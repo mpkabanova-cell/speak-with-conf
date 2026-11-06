@@ -11,9 +11,9 @@ import { plural } from "@/lib/analysis";
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "Мои тренировки — Скажи уверенно" },
+      { title: "Мои тренировки — Говори уверенно" },
       { name: "description", content: "История тренировок и попыток устных выступлений." },
-      { property: "og:title", content: "Мои тренировки — Скажи уверенно" },
+      { property: "og:title", content: "Мои тренировки — Говори уверенно" },
       { property: "og:description", content: "Сохранённые тренировки и попытки." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

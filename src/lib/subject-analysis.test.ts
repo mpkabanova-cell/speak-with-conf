@@ -58,3 +58,10 @@ describe("Subject accuracy rules", () => {
     expect(validateAnalysis(result, { ...input, source_text: null }).accuracy.basis).toBe("general_knowledge");
   });
 });
+import { buildAnalysisInput as bai, parseCustomCriteria as pcc } from "./subject-analysis";
+import { it as it2, expect as ex2 } from "vitest";
+it2("custom project criteria reach the analysis prompt", () => {
+  ex2(pcc("1. Есть презентация\n- Уложился в 5 минут\n\n")).toEqual(["Есть презентация", "Уложился в 5 минут"]);
+  ex2(bai({ type: "project", prompt: "п", transcript: "т", custom_criteria: "Есть презентация" })).toContain('"Есть презентация"');
+  ex2(bai({ type: "answer", prompt: "п", transcript: "т", custom_criteria: "Есть презентация" })).not.toContain("Есть презентация");
+});

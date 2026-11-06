@@ -11,13 +11,14 @@ import { createAttempt, uid } from "@/lib/db";
 import { fmtTime, fmtTimer } from "@/lib/audio-analysis";
 import { PRACTICE_TYPES } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { CriteriaPanel } from "@/components/CriteriaPanel";
 
 export const Route = createFileRoute("/practice/$id/record")({
   head: () => ({
     meta: [
-      { title: "Запись выступления — Скажи уверенно" },
+      { title: "Запись выступления — Говори уверенно" },
       { name: "description", content: "Запиши своё выступление через микрофон." },
-      { property: "og:title", content: "Запись выступления — Скажи уверенно" },
+      { property: "og:title", content: "Запись выступления — Говори уверенно" },
       { property: "og:description", content: "Запиши своё выступление через микрофон." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -179,6 +180,10 @@ function RecordPage() {
             <p className="text-xs font-bold uppercase tracking-wider text-brand-deep">{PRACTICE_TYPES[p.type].label}</p>
             <h1 className="mt-2 text-xl font-bold md:text-2xl">{p.prompt}</h1>
           </div>
+        )}
+
+        {p?.type === "project" && !recording && (
+          <CriteriaPanel className="mt-6 w-full text-left" hasSource={!!p.source_text} custom={p.custom_criteria} />
         )}
 
         <p className={cn("num mt-12 text-7xl font-extrabold md:text-8xl", recording ? "text-foreground" : "text-muted-foreground")}>

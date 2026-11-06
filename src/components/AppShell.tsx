@@ -11,7 +11,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
             <AudioLines className="size-4" />
           </span>
-          Скажи уверенно
+          Говори уверенно
         </Link>
         <Link
           to="/history"

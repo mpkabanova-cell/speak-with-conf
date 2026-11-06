@@ -29,9 +29,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/attempt/$id")({
   head: () => ({
     meta: [
-      { title: "Анализ выступления — Скажи уверенно" },
+      { title: "Анализ выступления — Говори уверенно" },
       { name: "description", content: "Показатели речи, рекомендации, структура и расшифровка выступления." },
-      { property: "og:title", content: "Анализ выступления — Скажи уверенно" },
+      { property: "og:title", content: "Анализ выступления — Говори уверенно" },
       { property: "og:description", content: "Показатели речи, рекомендации и расшифровка." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -213,7 +213,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
   const sa = attempt.structure_analysis;
   const stale = !!sa && (sa.transcript_hash !== hashText(transcript) || sa.analysis_version !== ANALYSIS_VERSION);
 
-  const analysisHash = hashText(`${ANALYSIS_VERSION}:${transcript}:${practice.prompt}:${practice.source_text ?? ""}`);
+  const analysisHash = hashText(`${ANALYSIS_VERSION}:${transcript}:${practice.prompt}:${practice.source_text ?? ""}:${practice.custom_criteria ?? ""}`);
   const savedError = attempt.analysis_error?.hash === analysisHash ? attempt.analysis_error.message : null;
 
   async function runAI() {
@@ -221,7 +221,7 @@ function Results({ attempt, practice, update, index }: { attempt: Attempt; pract
     setAiBusy(true);
     setAiError(null);
     try {
-      const r = await analyze({ data: { type: practice.type, prompt: practice.prompt, transcript: transcript.slice(0, 20000), source_text: practice.source_text?.slice(0, 20000) ?? null } });
+      const r = await analyze({ data: { type: practice.type, prompt: practice.prompt, transcript: transcript.slice(0, 20000), source_text: practice.source_text?.slice(0, 20000) ?? null, custom_criteria: practice.custom_criteria?.slice(0, 5000) ?? null } });
       if (!r.ok) {
         setAiError(r.error);
         await update({ ...latestAttempt.current, analysis_error: { hash: analysisHash, message: r.error } });

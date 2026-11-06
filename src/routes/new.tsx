@@ -13,13 +13,14 @@ import { savePractice, uid } from "@/lib/db";
 import { LANGUAGES, PRACTICE_TYPES, type LanguageCode, type PracticeType } from "@/lib/types";
 import { extractSourceText } from "@/lib/structure.functions";
 import { cn } from "@/lib/utils";
+import { CriteriaPanel } from "@/components/CriteriaPanel";
 
 export const Route = createFileRoute("/new")({
   head: () => ({
     meta: [
-      { title: "Новая тренировка — Скажи уверенно" },
+      { title: "Новая тренировка — Говори уверенно" },
       { name: "description", content: "Выбери формат выступления и тему, чтобы начать тренировку." },
-      { property: "og:title", content: "Новая тренировка — Скажи уверенно" },
+      { property: "og:title", content: "Новая тренировка — Говори уверенно" },
       { property: "og:description", content: "Ответ на вопрос, пересказ или защита проекта." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -75,6 +76,7 @@ function NewPractice() {
   const [lang, setLang] = useState<LanguageCode>("russian");
   const [langTouched, setLangTouched] = useState(false);
   const [reading, setReading] = useState(false);
+  const [criteria, setCriteria] = useState("");
   const extract = useServerFn(extractSourceText);
   const needsSource = type === "memorize";
   const showSource = type === "retelling" || type === "memorize" || type === "project";
@@ -125,6 +127,7 @@ function NewPractice() {
         target_duration: parsed.data.minutes ? Math.round(parsed.data.minutes * 60) : null,
         created_at: Date.now(),
         source_text: showSource && src ? src : null,
+        custom_criteria: type === "project" && criteria.trim() ? criteria.trim().slice(0, 5000) : null,
         language: type === "memorize" ? lang : "russian",
       });
       nav({ to: "/practice/$id/record", params: { id } });
@@ -223,6 +226,10 @@ function NewPractice() {
               </div>
             )}
           </div>
+        )}
+
+        {type === "project" && (
+          <CriteriaPanel className="mt-8" hasSource={!!source.trim()} custom={criteria} onChange={setCriteria} />
         )}
 
         <Label htmlFor="min" className="mt-6 block text-sm font-bold">
